@@ -1,5 +1,7 @@
 # OpenFAST
 
+[D-ICE notes at the end of this README.]
+
 OpenFAST is an open-source wind turbine simulation tool which builds on FAST v8. OpenFAST was created with the goal of being a community model developed and used by research laboratories, academia, and industry. It is managed by a dedicated team at the National Renewable Energy Lab. Our objective is to ensure that OpenFAST is sustainable software that is well tested and well documented.
 
 **OpenFAST is under active development**.
@@ -71,3 +73,119 @@ OpenFAST is being maintained and developed by researchers and software engineers
 * Envision Energy USA, Ltd
 * Brigham Young University
 * [Intel&reg; Parallel Computing Center (IPCC)](https://software.intel.com/en-us/ipcc)
+
+
+# D-ICE notes
+
+Be sure to clone the repo with the `--recursive` flag or execute `git submodule update --init --recursive` after cloning.
+
+A lot of information presented here comes from official documentation.
+Take a look at [OpenFAST repository](https://github.com/OpenFAST/openfast "OpenFAST repository"), [OpenFAST regression test repository](https://github.com/OpenFAST/r-test "OpenFAST regression test repository") and [OpenFAST documentation](https://openfast.readthedocs.io/en/master/ "OpenFAST documentation").
+
+## D-ICE developments
+
+This repository is a fork of NREL OpenFAST repository.
+It comes with two branches: `master` and `dev`.
+These two branches should contains only NREL developments. D-ICE developments should be placed in `dice-master` and `dice-develop` branches. Every other branches containing D-ICE develoments should start with `dice-`.
+
+## Compilation and test on linux
+
+On linux, you will need blas and lapack in order to compile openfast.
+You can install them with the command:
+
+`sudo apt install liblapack-dev libblas-dev`
+
+Then type the following commands in a terminal:
+
+```bash
+# create a directory called `build`
+mkdir build
+
+# go to the build directory
+cd build
+
+# execute CMake with testing build option
+cmake .. -DBUILD_TESTING=ON
+
+# execute a make command (with no target provided, equivalent to `make all`)
+# Replace N by the number of concurrent compilation processus
+make -j N
+```
+
+OpenFAST executable is located at `./build/glue-codes/openfast`.
+
+You may want to execute some regression tests.
+
+Before executing tests for 5MW turbines, you need to copy controller libraries. Execute the following commands in `build` folder:
+
+```bash
+cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON/build/DISCON.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON.dll
+cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_ITI/build/DISCON_ITIBarge.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_ITIBarge.dll
+cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3/build/DISCON_OC3Hywind.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3Hywind.dll
+```
+
+To execute the test named *5MW_OC3Spar_DLL_WTurb_WavesIrr*, you have to execute the following command:
+
+`ctest -R 5MW_OC3Spar_DLL_WTurb_WavesIrr`
+
+In case of success, you get the following output:
+
+    $ ctest -R 5MW_OC3Spar_DLL_WTurb_WavesIrr
+    Test project /home/benjaminm/projects/bladics/externals/openfast-dice/build
+        Start 23: 5MW_OC3Spar_DLL_WTurb_WavesIrr
+    1/1 Test #23: 5MW_OC3Spar_DLL_WTurb_WavesIrr ...   Passed   52.75 sec
+    
+    100% tests passed, 0 tests failed out of 1
+    
+    Label Time Summary:
+    aerodyn15    =  52.75 sec*proc (1 test)
+    elastodyn    =  52.75 sec*proc (1 test)
+    hydrodyn     =  52.75 sec*proc (1 test)
+    map          =  52.75 sec*proc (1 test)
+    openfast     =  52.75 sec*proc (1 test)
+    servodyn     =  52.75 sec*proc (1 test)
+    
+    Total Test time (real) =  52.75 sec
+
+In case of failure, you get the following output:
+
+    $ ctest -R 5MW_OC3Spar_DLL_WTurb_WavesIrr
+    Test project /home/benjaminm/projects/bladics/externals/openfast-dice/build
+        Start 23: 5MW_OC3Spar_DLL_WTurb_WavesIrr
+    1/1 Test #23: 5MW_OC3Spar_DLL_WTurb_WavesIrr ...***Failed   52.36 sec
+    
+    0% tests passed, 1 tests failed out of 1
+    
+    Label Time Summary:
+    aerodyn15    =  52.36 sec*proc (1 test)
+    elastodyn    =  52.36 sec*proc (1 test)
+    hydrodyn     =  52.36 sec*proc (1 test)
+    map          =  52.36 sec*proc (1 test)
+    openfast     =  52.36 sec*proc (1 test)
+    servodyn     =  52.36 sec*proc (1 test)
+    
+    Total Test time (real) =  52.36 sec
+    
+    The following tests FAILED:
+    	 23 - 5MW_OC3Spar_DLL_WTurb_WavesIrr (Failed)
+    Errors while running CTest
+
+It can fail as OpenFAST behavior depends on OS but also on compilator and blas version. In that case, you may need to change references of regression test.
+
+Here is a script which modify regression test reference for 5MW_OC3Spar_DLL_WTurb_WavesIrr test with linux and gfortran:
+
+```bash
+# go to 5MW_OC3Spar_DLL_WTurb_WavesIrr regression test folder
+cd ../reg_tests/r-test/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr
+
+# make a backup of reference results
+mkdir linux-gnu_backup
+mv linux-gnu/* linux-gnu_backup/
+
+# go back to build folder
+cd -
+
+# copy new references which have been generated when calling ctest
+cp reg_tests/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/* ../reg_tests/r-test/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/linux-gnu/
+```
+
