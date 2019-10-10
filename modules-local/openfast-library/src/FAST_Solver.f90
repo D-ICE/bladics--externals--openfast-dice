@@ -45,6 +45,8 @@ MODULE FAST_Solver
    USE SuperController
    Use ExtPtfm_MCKF
    
+   USE ElastoDyn_IO ! We need this for extra inputs (for D-ICE controllers)
+   
 
    IMPLICIT NONE
 
@@ -4711,6 +4713,30 @@ SUBROUTINE SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD,
                   
 END SUBROUTINE SolveOption1
 !----------------------------------------------------------------------------------------------------------------------------------
+!> This routine sets the inputs required for ServoDyn
+SUBROUTINE DICE_SrvD_ExtraInputSolve( u_SrvD, ED, BD, SrvD, AD14, AD, IfW, OpFM )
+!..................................................................................................................................
+
+   TYPE(SrvD_InputType),             INTENT(INOUT)  :: u_SrvD       !< ServoDyn Inputs at t
+   
+   TYPE(ElastoDyn_Data),     INTENT(INOUT) :: ED                  !< ElastoDyn data
+   TYPE(BeamDyn_Data),       INTENT(INOUT) :: BD                  !< BeamDyn data
+   TYPE(ServoDyn_Data),      INTENT(INOUT) :: SrvD                !< ServoDyn data
+   TYPE(AeroDyn14_Data),     INTENT(INOUT) :: AD14                !< AeroDyn14 data
+   TYPE(AeroDyn_Data),       INTENT(INOUT) :: AD                  !< AeroDyn data
+   TYPE(InflowWind_Data),    INTENT(INOUT) :: IfW                 !< InflowWind data
+   TYPE(OpenFOAM_Data),      INTENT(INOUT) :: OpFM                !< OpenFOAM data
+   
+   INTEGER(IntKi)                                   :: k            ! blade loop counter
+   
+   CHARACTER(*), PARAMETER                          :: RoutineName = 'DICE_SrvD_ExtraInputSolve' 
+   
+   
+   u_SrvD%PtfmPitch = ED%m%AllOuts( PtfmRDyi)*D2R
+   u_SrvD%PtfmRVyt = ED%m%AllOuts( PtfmRVyt)*D2R
+   
+END SUBROUTINE DICE_SrvD_ExtraInputSolve
+!----------------------------------------------------------------------------------------------------------------------------------
 !> This routine implements the "option 2" solve for all inputs without direct links to HD, SD, MAP, or the ED platform reference 
 !! point.
 SUBROUTINE SolveOption2(this_time, this_state, p_FAST, m_FAST, ED, BD, AD14, AD, SrvD, IfW, OpFM, MeshMapData, ErrStat, ErrMsg, firstCall)
@@ -4827,6 +4853,8 @@ SUBROUTINE SolveOption2(this_time, this_state, p_FAST, m_FAST, ED, BD, AD14, AD,
          CALL SrvD_InputSolve( p_FAST, m_FAST, SrvD%Input(1), ED%Output(1), IfW%y, OpFM%y, BD%y, MeshMapData, ErrStat2, ErrMsg2, SrvD%y ) ! note that this uses the outputs from the previous step, violating the framework for the Bladed DLL (if SrvD%y is used in another way, this will need to be changed)
       END IF
       CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+
+      CALL DICE_SrvD_ExtraInputSolve( SrvD%Input(1), ED, BD, SrvD, AD14, AD, IfW, OpFM ) ! Extra inputs needed for D-ICE controllers
 
       CALL SrvD_CalcOutput( this_time, SrvD%Input(1), SrvD%p, SrvD%x(this_state), SrvD%xd(this_state), SrvD%z(this_state), &
                              SrvD%OtherSt(this_state), SrvD%y, SrvD%m, ErrStat2, ErrMsg2 )

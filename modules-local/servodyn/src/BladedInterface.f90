@@ -92,6 +92,8 @@ MODULE BladedInterface
    INTEGER(IntKi), PARAMETER    :: R_v4  = 145        !< Start of below-rated torque-speed look-up table (record no.) for Bladed version 3.8 and later
 
    INTEGER(IntKi), PARAMETER    :: R = R_v4           !< start of the generator speed look-up table  
+   
+   INTEGER(IntKi), PARAMETER    :: N_EXTRA_RECORDS = 2 !< Number of extra records after generator speed look-up table
             
 
 CONTAINS
@@ -262,7 +264,7 @@ SUBROUTINE BladedInterface_Init(u,p,m,y,InputFileData, ErrStat, ErrMsg)
    IF ( ErrStat >= AbortErrLev ) RETURN
    
    
-   CALL AllocAry( m%dll_data%avrSwap,   R+(2*p%DLL_NumTrq)-1, 'avrSwap', ErrStat2, ErrMsg2 )
+   CALL AllocAry( m%dll_data%avrSwap,   R+(2*p%DLL_NumTrq)-1 + N_EXTRA_RECORDS, 'avrSwap', ErrStat2, ErrMsg2 ) ! Allocate memory for avrSwap, counting extra fields for D-ICE controllers
       CALL CheckError(ErrStat2,ErrMsg2)
       IF ( ErrStat >= AbortErrLev ) RETURN
 
@@ -518,7 +520,7 @@ END IF
    dll_data%avrSWAP(49) = REAL( ErrMsgSz ) + 1              !> * Record 49: Maximum number of characters in the "MESSAGE" argument (-) [size of ErrMsg argument plus 1 (we add one for the C NULL CHARACTER)]
    dll_data%avrSWAP(50) = REAL( LEN_TRIM(p%DLL_InFile) ) +1 !> * Record 50: Number of characters in the "INFILE"  argument (-) [trimmed length of DLL_InFile parameter plus 1 (we add one for the C NULL CHARACTER)]
    dll_data%avrSWAP(51) = REAL( LEN_TRIM(p%RootName)   ) +1 !> * Record 51: Number of characters in the "OUTNAME" argument (-) [trimmed length of RootName parameter plus 1 (we add one for the C NULL CHARACTER)]
-! Record 52 is reserved for future use                      ! DLL interface version number (-)
+   dll_data%avrSWAP(52) = 1024 * N_EXTRA_RECORDS            !> * Record 52: DLL interface version number. Take account the number of extra records for D-ICE controllers.
    dll_data%avrSWAP(53) = u%YawBrTAxp                       !> * Record 53: Tower top fore-aft     acceleration (m/s^2) [SrvD input]
    dll_data%avrSWAP(54) = u%YawBrTAyp                       !> * Record 54: Tower top side-to-side acceleration (m/s^2) [SrvD input]
 ! Records 55-59 are outputs [see Retrieve_avrSWAP()]
@@ -574,6 +576,10 @@ END IF
 !> * Records 120-129: User-defined variables 1-10; ignored in ServoDyn
 ! Records 130-142 are outputs [see Retrieve_avrSWAP()]   
 ! Records L1 and onward are outputs [see Retrieve_avrSWAP()]
+   
+   !> Extra records needed for D-ICE controllers
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 0) = u%PtfmPitch !> Extra record 0: Platform pitch angle
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 1) = u%PtfmRVyt !> Extra record 1: Platform pitch velocity
    
    
    

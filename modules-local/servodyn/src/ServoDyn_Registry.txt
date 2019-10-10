@@ -323,6 +323,10 @@ typedef	^	InputType	TMD_InputType	NTMD	-	-	-	"TMD module inputs - nacelle"	-
 typedef	^	InputType	TMD_InputType	TTMD	-	-	-	"TMD module inputs - tower"	-
 typedef	^	InputType	SiKi	SuperController	{:}	-	-	"A swap array: used to pass input data to the DLL controller from the supercontroller"	-
 
+# ..... Extra Inputs needed for D-ICE controllers .................................................................................
+typedef	^	InputType	ReKi	PtfmPitch	-	-	-	"Platform pitch tilt angular (rotational) displacement"	radians
+typedef	^	InputType	ReKi	PtfmRVyt	-	-	-	"Platform pitch tilt angular (rotational) velocity"	rad/s
+
 # ..... Outputs ...................................................................................................................
 # Define outputs that are contained on the mesh here:
 #typedef	^	OutputType	MeshType	MeshedOutput	-	-	-	"Meshed output data"	-
