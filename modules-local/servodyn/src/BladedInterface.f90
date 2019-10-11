@@ -496,7 +496,7 @@ SUBROUTINE Fill_avrSWAP( t, u, p, ErrMsgSz, dll_data )
    dll_data%avrSWAP(23) = u%GenTrq_prev                     !> * Record 23: Measured generator torque (Nm) [SrvD input from previous step output; should technically be a state]
    dll_data%avrSWAP(24) = u%YawErr                          !> * Record 24: Measured yaw error (rad) [SrvD input]
    IF ( p%DLL_NumTrq == 0 )  THEN  ! Torque-speed table look-up not selected
-      dll_data%avrSWAP(25) = 0.0                            ! Start of below-rated torque-speed look-up table (record no.) -- 0.0 indicates that torque-speed table look-up is not selected
+      dll_data%avrSWAP(25) = R                              ! Start of below-rated torque-speed look-up table (record no.) -- D-ICE controllers : It is needed even if torque-speed table look-up is not selected
       dll_data%avrSWAP(26) = 0.0                            ! No. of points in torque-speed look-up table (-)              -- 0.0 indicates that torque-speed table look-up is not selected
    ELSE                 ! Torque-speed table look-up selected
       dll_data%avrSWAP(25) = R                              !> * Record 25: Start of below-rated torque-speed look-up table (record no.) [parameter \f$R\f$ (bladedinterface::r) or 0 if DLL_NumTrq == 0]
