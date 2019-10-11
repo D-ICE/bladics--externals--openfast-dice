@@ -126,7 +126,7 @@ cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3/bui
 
 To execute the test named *5MW_OC3Spar_DLL_WTurb_WavesIrr*, you have to execute the following command:
 
-`ctest -R 5MW_OC3Spar_DLL_WTurb_WavesIrr`
+`ctest -R ^5MW_OC3Spar_DLL_WTurb_WavesIrr$`
 
 In case of success, you get the following output:
 
