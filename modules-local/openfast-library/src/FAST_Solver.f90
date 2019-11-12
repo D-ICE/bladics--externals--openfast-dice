@@ -4734,6 +4734,16 @@ SUBROUTINE DICE_SrvD_ExtraInputSolve( u_SrvD, ED, BD, SrvD, AD14, AD, IfW, OpFM 
    
    u_SrvD%PtfmPitch = ED%m%AllOuts( PtfmRDyi)*D2R
    u_SrvD%PtfmRVyt = ED%m%AllOuts( PtfmRVyt)*D2R
+   u_SrvD%PtfmRAyt = ED%m%AllOuts( PtfmRAyt)*D2R
+   u_SrvD%PtfmRoll = ED%m%AllOuts( PtfmRDxi)*D2R
+   u_SrvD%PtfmRVxt = ED%m%AllOuts( PtfmRVxt)*D2R
+   u_SrvD%PtfmRAxt = ED%m%AllOuts( PtfmRAxt)*D2R
+   u_SrvD%PtfmYaw = ED%m%AllOuts( PtfmRDzi)*D2R
+   u_SrvD%PtfmRVzt = ED%m%AllOuts( PtfmRVzt)*D2R
+   u_SrvD%PtfmRAzt = ED%m%AllOuts( PtfmRAzt)*D2R
+   u_SrvD%PtfmSway = ED%m%AllOuts( PtfmTDyi)
+   u_SrvD%PtfmSurge = ED%m%AllOuts( PtfmTDxi)
+   u_SrvD%PtfmHeave = ED%m%AllOuts( PtfmTDzi)
    
 END SUBROUTINE DICE_SrvD_ExtraInputSolve
 !----------------------------------------------------------------------------------------------------------------------------------
