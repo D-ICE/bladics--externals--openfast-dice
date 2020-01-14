@@ -45,6 +45,8 @@ MODULE FAST_Solver
    USE SuperController
    Use ExtPtfm_MCKF
    
+   USE ElastoDyn_IO ! We need this for extra inputs (for D-ICE controllers)
+   
 
    IMPLICIT NONE
 
@@ -4698,6 +4700,40 @@ SUBROUTINE SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD,
                   
 END SUBROUTINE SolveOption1
 !----------------------------------------------------------------------------------------------------------------------------------
+!> This routine sets the inputs required for ServoDyn
+SUBROUTINE DICE_SrvD_ExtraInputSolve( u_SrvD, ED, BD, SrvD, AD14, AD, IfW, OpFM )
+!..................................................................................................................................
+
+   TYPE(SrvD_InputType),             INTENT(INOUT)  :: u_SrvD       !< ServoDyn Inputs at t
+   
+   TYPE(ElastoDyn_Data),     INTENT(INOUT) :: ED                  !< ElastoDyn data
+   TYPE(BeamDyn_Data),       INTENT(INOUT) :: BD                  !< BeamDyn data
+   TYPE(ServoDyn_Data),      INTENT(INOUT) :: SrvD                !< ServoDyn data
+   TYPE(AeroDyn14_Data),     INTENT(INOUT) :: AD14                !< AeroDyn14 data
+   TYPE(AeroDyn_Data),       INTENT(INOUT) :: AD                  !< AeroDyn data
+   TYPE(InflowWind_Data),    INTENT(INOUT) :: IfW                 !< InflowWind data
+   TYPE(OpenFOAM_Data),      INTENT(INOUT) :: OpFM                !< OpenFOAM data
+   
+   INTEGER(IntKi)                                   :: k            ! blade loop counter
+   
+   CHARACTER(*), PARAMETER                          :: RoutineName = 'DICE_SrvD_ExtraInputSolve' 
+   
+   
+   u_SrvD%PtfmPitch = ED%m%AllOuts( PtfmRDyi)*D2R
+   u_SrvD%PtfmRVyt = ED%m%AllOuts( PtfmRVyt)*D2R
+   u_SrvD%PtfmRAyt = ED%m%AllOuts( PtfmRAyt)*D2R
+   u_SrvD%PtfmRoll = ED%m%AllOuts( PtfmRDxi)*D2R
+   u_SrvD%PtfmRVxt = ED%m%AllOuts( PtfmRVxt)*D2R
+   u_SrvD%PtfmRAxt = ED%m%AllOuts( PtfmRAxt)*D2R
+   u_SrvD%PtfmYaw = ED%m%AllOuts( PtfmRDzi)*D2R
+   u_SrvD%PtfmRVzt = ED%m%AllOuts( PtfmRVzt)*D2R
+   u_SrvD%PtfmRAzt = ED%m%AllOuts( PtfmRAzt)*D2R
+   u_SrvD%PtfmSway = ED%m%AllOuts( PtfmTDyi)
+   u_SrvD%PtfmSurge = ED%m%AllOuts( PtfmTDxi)
+   u_SrvD%PtfmHeave = ED%m%AllOuts( PtfmTDzi)
+   
+END SUBROUTINE DICE_SrvD_ExtraInputSolve
+!----------------------------------------------------------------------------------------------------------------------------------
 !> This routine implements the first part of the "option 2" solve for inputs that apply to BeamDyn and AeroDyn 
 SUBROUTINE SolveOption2a_Inp2BD(this_time, this_state, p_FAST, m_FAST, ED, BD, AD14, AD, SrvD, IfW, OpFM, MeshMapData, ErrStat, ErrMsg)
    REAL(DbKi)              , intent(in   ) :: this_time           !< The current simulation time (actual or time of prediction)
@@ -4896,6 +4932,8 @@ SUBROUTINE SolveOption2c_Inp2AD_SrvD(this_time, this_state, p_FAST, m_FAST, ED, 
          CALL SrvD_InputSolve( p_FAST, m_FAST, SrvD%Input(1), ED%Output(1), IfW%y, OpFM%y, BD%y, MeshMapData, ErrStat2, ErrMsg2, SrvD%y ) ! note that this uses the outputs from the previous step, violating the framework for the Bladed DLL (if SrvD%y is used in another way, this will need to be changed)
       END IF
       CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+      
+      CALL DICE_SrvD_ExtraInputSolve( SrvD%Input(1), ED, BD, SrvD, AD14, AD, IfW, OpFM ) ! Extra inputs needed for D-ICE controllers
 
    END IF
    
