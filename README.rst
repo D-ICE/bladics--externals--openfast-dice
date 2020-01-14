@@ -183,8 +183,8 @@ Then type the following commands in a terminal:
   # go to the build directory
   cd build
 
-  # execute CMake with testing build option
-  cmake .. -DBUILD_TESTING=ON
+  # execute CMake with testing build option and generate types option
+  cmake .. -DBUILD_TESTING=ON -DGENERATE_TYPES=ON
 
   # execute a make command (with no target provided, equivalent to `make all`)
   # Replace N by the number of concurrent compilation processus
