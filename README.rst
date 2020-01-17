@@ -168,6 +168,9 @@ These two branches should contains only NREL developments. D-ICE developments sh
 Compilation and test on linux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Compilation
+"""""""""""
+
 On linux, you will need blas and lapack in order to compile openfast.
 You can install them with the command:
 
@@ -193,15 +196,19 @@ Then type the following commands in a terminal:
 
 OpenFAST executable is located at `./build/glue-codes/openfast`.
 
+Official NREL Tests
+"""""""""""""""""""
+
 You may want to execute some regression tests.
 
 Before executing tests for 5MW turbines, you need to copy controller libraries. Execute the following commands in `build` folder:
 
 .. code-block:: bash
 
-  cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON/build/DISCON.dll reg_tests/glue- codes/openfast/5MW_Baseline/ServoData/DISCON.dll
+  cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON/build/DISCON.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON.dll
   cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_ITI/build/DISCON_ITIBarge.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_ITIBarge.dll
   cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3/build/DISCON_OC3Hywind.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3Hywind.dll
+  cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3_DICE_EXTRA_TEST/build/DISCON_OC3Hywind_DICE_EXTRA_TEST.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3Hywind_DICE_EXTRA_TEST.dll
 
 
 To execute the test named *5MW_OC3Spar_DLL_WTurb_WavesIrr*, you have to execute the following command:
@@ -271,6 +278,29 @@ Here is a script which modify regression test reference for 5MW_OC3Spar_DLL_WTur
   cd -
 
   # copy new references which have been generated when calling ctest
-  cp reg_tests/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/* ../reg_tests/r-test/glue- 
-  codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/linux-gnu/
+  cp reg_tests/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/* ../reg_tests/r-test/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/linux-gnu/
+
+D-ICE Tests
+"""""""""""
+
+Specific tests have been created for validating D-ICE developments.
+
+`DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr` tests augmentation of BladedInterface with extra fields. It relies on a specific DLL which logs values of extra fields in a csv file. If simulation went fine, user can manually check differences between log from DLL and log from OpenFAST executable.
+
+In build folder, do the following in order to create reference files:
+
+.. code-block:: bash
+
+  mkdir ../reg_tests/r-test/glue-codes/openfast/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr/linux-gnu/
+  ctest -R ^DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr$
+  cp reg_tests/glue-codes/openfast/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr/* ../reg_tests/r-test/glue-codes/openfast/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr/linux-gnu/
+
+Then after copy, the test should pass:
+
+.. code-block:: bash
+
+  ctest -R ^DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr$
+
+Now, you can access csv log file in `reg_tests/extra_records.csv` and compare it to output from fast at 
+`reg_tests/glue-codes/openfast/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr.out`.
 
