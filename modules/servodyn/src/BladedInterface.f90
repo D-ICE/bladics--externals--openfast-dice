@@ -93,7 +93,7 @@ MODULE BladedInterface
 
    INTEGER(IntKi), PARAMETER    :: R = R_v4           !< start of the generator speed look-up table  
    
-   INTEGER(IntKi), PARAMETER    :: N_EXTRA_RECORDS = 12 !< Number of extra records after generator speed look-up table
+   INTEGER(IntKi), PARAMETER    :: N_EXTRA_RECORDS = 24 !< Number of extra records after generator speed look-up table
             
 
 CONTAINS
@@ -590,6 +590,18 @@ END IF
    dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 9) = u%PtfmSway !> Extra record 9: Platform sway displacement
    dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 10) = u%PtfmSurge !> Extra record 10: Platform surge displacement
    dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 11) = u%PtfmHeave !> Extra record 11: Platform heave displacement
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 12) = u%PtfmTVyi !> Extra record 12: Platform sway velocity
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 13) = u%PtfmTVxi !> Extra record 13: Platform surge velocity
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 14) = u%PtfmTVzi !> Extra record 14: Platform heave velocity
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 15) = u%PtfmTAyi !> Extra record 15: Platform sway acceleration
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 16) = u%PtfmTAxi !> Extra record 16: Platform surge acceleration
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 17) = u%PtfmTAzi !> Extra record 17: Platform heave acceleration
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 18) = u%YawBrRDyp !> Extra record 18: Tower-top pitch position
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 19) = u%YawBrRDxp !> Extra record 19: Tower-top roll position
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 20) = u%YawBrRDzp !> Extra record 20: Tower-top torsion position
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 21) = u%YawBrRVyp !> Extra record 21: Tower-top pitch velocity
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 22) = u%YawBrRVxp !> Extra record 22: Tower-top roll velocity
+   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 23) = u%YawBrRVzp !> Extra record 23: Tower-top torsion velocity
    
    
    

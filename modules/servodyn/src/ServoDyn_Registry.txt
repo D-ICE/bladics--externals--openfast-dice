@@ -336,6 +336,18 @@ typedef	^	InputType	ReKi	PtfmRAzt	-	-	-	"Platform yaw tilt angular (rotational) 
 typedef	^	InputType	ReKi	PtfmSway	-	-	-	"Platform horizontal sway (translational) displacement"	m
 typedef	^	InputType	ReKi	PtfmSurge	-	-	-	"Platform horizontal surge (translational) displacement"	m
 typedef	^	InputType	ReKi	PtfmHeave	-	-	-	"Platform vertical heave (translational) displacement"	m
+typedef	^	InputType	ReKi	PtfmTVyi	-	-	-	"Platform horizontal sway (translational) velocity" m/s
+typedef	^	InputType	ReKi	PtfmTVxi	-	-	-	"Platform horizontal surge (translational) velocity" m/s
+typedef	^	InputType	ReKi	PtfmTVzi	-	-	-	"Platform vertical heave (translational) velocity" m/s
+typedef	^	InputType	ReKi	PtfmTAyi	-	-	-	"Platform horizontal sway (translational) acceleration" m/s^2
+typedef	^	InputType	ReKi	PtfmTAxi	-	-	-	"Platform horizontal surge (translational) acceleration" m/s^2
+typedef	^	InputType	ReKi	PtfmTAzi	-	-	-	"Platform vertical heave (translational) acceleration" m/s^2
+typedef	^	InputType	ReKi	YawBrRDyp	-	-	-	"Tower-top / yaw bearing angular (rotational) pitch position (absolute)" rad
+typedef	^	InputType	ReKi	YawBrRDxp	-	-	-	"Tower-top / yaw bearing angular (rotational) roll position (absolute)" rad
+typedef	^	InputType	ReKi	YawBrRDzp	-	-	-	"Tower-top / yaw bearing angular (rotational) torsion position (absolute)" rad
+typedef	^	InputType	ReKi	YawBrRVyp	-	-	-	"Tower-top / yaw bearing angular (rotational) pitch velocity (absolute)" rad/s
+typedef	^	InputType	ReKi	YawBrRVxp	-	-	-	"Tower-top / yaw bearing angular (rotational) roll velocity (absolute)" rad/s
+typedef	^	InputType	ReKi	YawBrRVzp	-	-	-	"Tower-top / yaw bearing angular (rotational) torsion velocity (absolute)" rad/s
 
 # ..... Outputs ...................................................................................................................
 # Define outputs that are contained on the mesh here:

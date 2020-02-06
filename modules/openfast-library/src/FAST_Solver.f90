@@ -4731,6 +4731,18 @@ SUBROUTINE DICE_SrvD_ExtraInputSolve( u_SrvD, ED, BD, SrvD, AD14, AD, IfW, OpFM 
    u_SrvD%PtfmSway = ED%m%AllOuts( PtfmTDyi)
    u_SrvD%PtfmSurge = ED%m%AllOuts( PtfmTDxi)
    u_SrvD%PtfmHeave = ED%m%AllOuts( PtfmTDzi)
+   u_SrvD%PtfmTVyi = ED%m%AllOuts( PtfmTVyi)
+   u_SrvD%PtfmTVxi = ED%m%AllOuts( PtfmTVxi)
+   u_SrvD%PtfmTVzi = ED%m%AllOuts( PtfmTVzi)
+   u_SrvD%PtfmTAyi = ED%m%AllOuts( PtfmTAyi)
+   u_SrvD%PtfmTAxi = ED%m%AllOuts( PtfmTAxi)
+   u_SrvD%PtfmTAzi = ED%m%AllOuts( PtfmTAzi)
+   u_SrvD%YawBrRDyp = u_SrvD%PtfmPitch + ED%m%AllOuts( YawBrRDyt)*D2R
+   u_SrvD%YawBrRDxp = u_SrvD%PtfmRoll + ED%m%AllOuts( YawBrRDxt)*D2R
+   u_SrvD%YawBrRDzp = u_SrvD%PtfmYaw + ED%m%AllOuts( YawBrRDzt)*D2R
+   u_SrvD%YawBrRVyp = ED%m%AllOuts( YawBrRVyp)*D2R
+   u_SrvD%YawBrRVxp = ED%m%AllOuts( YawBrRVxp)*D2R
+   u_SrvD%YawBrRVzp = ED%m%AllOuts( YawBrRVzp)*D2R
    
 END SUBROUTINE DICE_SrvD_ExtraInputSolve
 !----------------------------------------------------------------------------------------------------------------------------------
