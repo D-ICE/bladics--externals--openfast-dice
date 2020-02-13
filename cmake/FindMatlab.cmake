@@ -255,7 +255,7 @@ set(MATLAB_VERSIONS_MAPPING
 
 
 # temporary folder for all Matlab runs
-set(_matlab_temporary_folder ${CMAKE_BINARY_DIR}/Matlab)
+set(_matlab_temporary_folder ${OpenFAST_BINARY_DIR}/Matlab)
 
 if(NOT EXISTS "${_matlab_temporary_folder}")
   file(MAKE_DIRECTORY "${_matlab_temporary_folder}")
@@ -811,7 +811,7 @@ endfunction()
 #   ``WORKING_DIRECTORY``
 #     This will be the working directory for the test. If specified it will
 #     also be the output directory used for the log file of the test run.
-#     If not specified the temporary directory ``${CMAKE_BINARY_DIR}/Matlab`` will
+#     If not specified the temporary directory ``${OpenFAST_BINARY_DIR}/Matlab`` will
 #     be used as the working directory and the log location.
 #
 function(matlab_add_unit_test)

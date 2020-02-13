@@ -46,7 +46,7 @@ function(generate_f90_types regfile outfile)
   add_custom_command(
     OUTPUT ${outfile}
     DEPENDS openfast_registry ${input}
-    COMMAND ${CMAKE_BINARY_DIR}/modules/openfast-registry/openfast_registry ${input} "-O" "${outdir}" ${OPENFAST_REGISTRY_INCLUDES} ${ARGN}
+    COMMAND ${OpenFAST_BINARY_DIR}/modules/openfast-registry/openfast_registry ${input} "-O" "${outdir}" ${OPENFAST_REGISTRY_INCLUDES} ${ARGN}
   )
   set_source_files_properties(${output} PROPERTIES GENERATED TRUE)
 endfunction(generate_f90_types)
@@ -60,7 +60,7 @@ endfunction(generate_f90_types)
 function(set_registry_includes modules_location)
   foreach(IDIR IN ITEMS ${ARGN})
     set(OPENFAST_REGISTRY_INCLUDES
-      ${OPENFAST_REGISTRY_INCLUDES} -I ${CMAKE_SOURCE_DIR}/${modules_location}/${IDIR}/src
+      ${OPENFAST_REGISTRY_INCLUDES} -I ${OpenFAST_SOURCE_DIR}/${modules_location}/${IDIR}/src
       CACHE INTERNAL "Registry includes paths")
   endforeach(IDIR IN ITEMS ${ARGN})
 endfunction(set_registry_includes)
