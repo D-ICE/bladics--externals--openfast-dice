@@ -713,7 +713,7 @@ SUBROUTINE Orca_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMsg
       ! Local variables for the getting the types correct to pass to the DLL
    CHARACTER(LEN=p%SimNamePathLen)                 :: DLL_DirRootName   !< Path and simulation name without extension
    REAL(C_FLOAT)                                   :: DLL_X(6)          !< Translational and rotational displacement (m, radians) relative to inertial frame.
-   REAL(C_FLOAT)                                   :: DLL_Xdot(6)       !< Translational and rotational velocity (m/s, radians/s) relative to inertial frame.
+   REAL(C_FLOAT)                                   :: DLL_Xdot_extended(12)  !< Translational and rotational velocity (m/s, radians/s) relative to inertial frame, plus acceleration.
    REAL(C_FLOAT)                                   :: DLL_ZTime         !< Current time in seconds
    REAL(C_FLOAT)                                   :: DLL_PtfmAM(6,6)   !< Added mass matrix (kg, kg-m, kg-m^2)
    REAL(C_FLOAT)                                   :: DLL_PtfmFt(6)     !< Platform forces -- [3 translation (N), 3 moments (N-m)] at reference point.
@@ -743,7 +743,8 @@ SUBROUTINE Orca_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMsg
       ! Copy position and motion information over to pass to the DLL
    DO I=1,6
       DLL_X(I)    =  q(I)
-      DLL_Xdot(I) =  qdot(I)
+      DLL_Xdot_extended(I) =  qdot(I)
+      DLL_Xdot_extended(6 + I) = qdotdot(I)
    ENDDO
 
 
@@ -760,7 +761,7 @@ SUBROUTINE Orca_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMsg
          ! Setup the pointer to the DLL procedure
       CALL C_F_PROCPOINTER( p%DLL_Orca%ProcAddr(2), OrcaDLL_Calc )
          ! Call OrcaFlex to run the calculation.  There is no error trapping on the OrcaFlex side, so we will have to do some checks on what receive back
-      CALL OrcaDLL_Calc( DLL_X, DLL_Xdot, DLL_ZTime, DLL_DirRootName, DLL_PtfmAM, DLL_PtfmFt )
+      CALL OrcaDLL_Calc( DLL_X, DLL_Xdot_extended, DLL_ZTime, DLL_DirRootName, DLL_PtfmAM, DLL_PtfmFt )
       m%LastTimeStep =  t
 
          ! Copy data over from the DLL output to the m
