@@ -128,7 +128,7 @@ MODULE OrcaFlexInterface
          !GCC$ ATTRIBUTES STDCALL :: OrcaFlexUserPtfmLd
          CHARACTER(KIND=C_CHAR),    INTENT(IN   )  :: DirRoot
          REAL(C_FLOAT),             INTENT(IN   )  :: X(6)           !< Translational and rotational displacement (m, radians) relative to inertial frame.
-         REAL(C_FLOAT),             INTENT(IN   )  :: XD(6)          !< Translational and rotational velocity (m/s, radians/s) relative to inertial frame.
+         REAL(C_FLOAT),             INTENT(IN   )  :: XD(12)          !< Translational and rotational velocity (m/s, radians/s) relative to inertial frame.
          REAL(C_FLOAT),             INTENT(IN   )  :: ZTime          !< Current time in seconds
          REAL(C_FLOAT),             INTENT(  OUT)  :: PtfmAM(6,6)    !< Added mass matrix (kg, kg-m, kg-m^2)
          REAL(C_FLOAT),             INTENT(  OUT)  :: PtfmFt(6)      !< Platform forces -- [3 translation (N), 3 moments (N-m)] at reference point.
