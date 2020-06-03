@@ -124,9 +124,9 @@ install(CODE
   "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/openfast/\")")
 
 # Install the library dependency information
-install(EXPORT OpenFASTLibraries
-  DESTINATION lib/cmake/OpenFAST
-  FILE OpenFASTLibraries.cmake)
+#install(EXPORT OpenFASTLibraries
+#  DESTINATION lib/cmake/OpenFAST
+#  FILE OpenFASTLibraries.cmake)
 
 # Create OpenFAST config so that other codes can find OpenFAST
 include(CMakePackageConfigHelpers)
