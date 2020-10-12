@@ -1,6 +1,6 @@
 [submodule "reg_tests/r-test"]
 	path = reg_tests/r-test
-	url = git@github.com:D-ICE/bladics--externals--openfast-rtest-dice.git
+	url = https://github.com/D-ICE/bladics--externals--openfast-rtest-dice.git
 [submodule "unit_tests/pfunit"]
 	path = unit_tests/pfunit
 	url = https://github.com/Goddard-Fortran-Ecosystem/pFUnit.git
