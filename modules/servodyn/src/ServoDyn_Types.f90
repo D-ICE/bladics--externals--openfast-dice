@@ -392,9 +392,35 @@ IMPLICIT NONE
     REAL(ReKi)  :: RotPwr      !< Rotor power (this is equivalent to the low-speed shaft power) [W]
     REAL(ReKi)  :: HorWindV      !< Horizontal hub-height wind velocity magnitude [m/s]
     REAL(ReKi)  :: YawAngle      !< Estimate of yaw (nacelle + platform) [radians]
+    REAL(ReKi)  :: ElecPwr_prev      !< Electrical power (from previous step), sent to Bladed DLL [W]
+    REAL(ReKi)  :: GenTrq_prev      !< Electrical generator torque (from previous step), sent to Bladed DLL [N-m]
     TYPE(TMD_InputType)  :: NTMD      !< TMD module inputs - nacelle [-]
     TYPE(TMD_InputType)  :: TTMD      !< TMD module inputs - tower [-]
     REAL(SiKi) , DIMENSION(:), ALLOCATABLE  :: SuperController      !< A swap array: used to pass input data to the DLL controller from the supercontroller [-]
+    REAL(ReKi)  :: PtfmPitch      !< Platform pitch tilt angular (rotational) displacement [radians]
+    REAL(ReKi)  :: PtfmRVyt      !< Platform pitch tilt angular (rotational) velocity [rad/s]
+    REAL(ReKi)  :: PtfmRAyt      !< Platform pitch tilt angular (rotational) acceleration [rad/s^2]
+    REAL(ReKi)  :: PtfmRoll      !< Platform roll tilt angular (rotational) displacement [radians]
+    REAL(ReKi)  :: PtfmRVxt      !< Platform roll tilt angular (rotational) velocity [rad/s]
+    REAL(ReKi)  :: PtfmRAxt      !< Platform roll tilt angular (rotational) acceleration [rad/s^2]
+    REAL(ReKi)  :: PtfmYaw      !< Platform yaw tilt angular (rotational) displacement [radians]
+    REAL(ReKi)  :: PtfmRVzt      !< Platform yaw tilt angular (rotational) velocity [rad/s]
+    REAL(ReKi)  :: PtfmRAzt      !< Platform yaw tilt angular (rotational) acceleration [rad/s^2]
+    REAL(ReKi)  :: PtfmSway      !< Platform horizontal sway (translational) displacement [m]
+    REAL(ReKi)  :: PtfmSurge      !< Platform horizontal surge (translational) displacement [m]
+    REAL(ReKi)  :: PtfmHeave      !< Platform vertical heave (translational) displacement [m]
+    REAL(ReKi)  :: PtfmTVyi      !< Platform horizontal sway (translational) velocity [m/s]
+    REAL(ReKi)  :: PtfmTVxi      !< Platform horizontal surge (translational) velocity [m/s]
+    REAL(ReKi)  :: PtfmTVzi      !< Platform vertical heave (translational) velocity [m/s]
+    REAL(ReKi)  :: PtfmTAyi      !< Platform horizontal sway (translational) acceleration [m/s^2]
+    REAL(ReKi)  :: PtfmTAxi      !< Platform horizontal surge (translational) acceleration [m/s^2]
+    REAL(ReKi)  :: PtfmTAzi      !< Platform vertical heave (translational) acceleration [m/s^2]
+    REAL(ReKi)  :: YawBrRDyp      !< Tower-top / yaw bearing angular (rotational) pitch position (absolute) [rad]
+    REAL(ReKi)  :: YawBrRDxp      !< Tower-top / yaw bearing angular (rotational) roll position (absolute) [rad]
+    REAL(ReKi)  :: YawBrRDzp      !< Tower-top / yaw bearing angular (rotational) torsion position (absolute) [rad]
+    REAL(ReKi)  :: YawBrRVyp      !< Tower-top / yaw bearing angular (rotational) pitch velocity (absolute) [rad/s]
+    REAL(ReKi)  :: YawBrRVxp      !< Tower-top / yaw bearing angular (rotational) roll velocity (absolute) [rad/s]
+    REAL(ReKi)  :: YawBrRVzp      !< Tower-top / yaw bearing angular (rotational) torsion velocity (absolute) [rad/s]
   END TYPE SrvD_InputType
 ! =======================
 ! =========  SrvD_OutputType  =======
@@ -6421,6 +6447,30 @@ IF (ALLOCATED(SrcInputData%SuperController)) THEN
   END IF
     DstInputData%SuperController = SrcInputData%SuperController
 ENDIF
+    DstInputData%PtfmPitch = SrcInputData%PtfmPitch
+    DstInputData%PtfmRVyt = SrcInputData%PtfmRVyt
+    DstInputData%PtfmRAyt = SrcInputData%PtfmRAyt
+    DstInputData%PtfmRoll = SrcInputData%PtfmRoll
+    DstInputData%PtfmRVxt = SrcInputData%PtfmRVxt
+    DstInputData%PtfmRAxt = SrcInputData%PtfmRAxt
+    DstInputData%PtfmYaw = SrcInputData%PtfmYaw
+    DstInputData%PtfmRVzt = SrcInputData%PtfmRVzt
+    DstInputData%PtfmRAzt = SrcInputData%PtfmRAzt
+    DstInputData%PtfmSway = SrcInputData%PtfmSway
+    DstInputData%PtfmSurge = SrcInputData%PtfmSurge
+    DstInputData%PtfmHeave = SrcInputData%PtfmHeave
+    DstInputData%PtfmTVyi = SrcInputData%PtfmTVyi
+    DstInputData%PtfmTVxi = SrcInputData%PtfmTVxi
+    DstInputData%PtfmTVzi = SrcInputData%PtfmTVzi
+    DstInputData%PtfmTAyi = SrcInputData%PtfmTAyi
+    DstInputData%PtfmTAxi = SrcInputData%PtfmTAxi
+    DstInputData%PtfmTAzi = SrcInputData%PtfmTAzi
+    DstInputData%YawBrRDyp = SrcInputData%YawBrRDyp
+    DstInputData%YawBrRDxp = SrcInputData%YawBrRDxp
+    DstInputData%YawBrRDzp = SrcInputData%YawBrRDzp
+    DstInputData%YawBrRVyp = SrcInputData%YawBrRVyp
+    DstInputData%YawBrRVxp = SrcInputData%YawBrRVxp
+    DstInputData%YawBrRVzp = SrcInputData%YawBrRVzp
  END SUBROUTINE SrvD_CopyInput
 
  SUBROUTINE SrvD_DestroyInput( InputData, ErrStat, ErrMsg )
@@ -6521,7 +6571,9 @@ ENDIF
       Re_BufSz   = Re_BufSz   + 1  ! RotPwr
       Re_BufSz   = Re_BufSz   + 1  ! HorWindV
       Re_BufSz   = Re_BufSz   + 1  ! YawAngle
-   ! Allocate buffers for subtypes, if any (we'll get sizes from these) 
+      Re_BufSz   = Re_BufSz   + 1  ! ElecPwr_prev
+      Re_BufSz   = Re_BufSz   + 1  ! GenTrq_prev
+   ! Allocate buffers for subtypes, if any (we'll get sizes from these)
       Int_BufSz   = Int_BufSz + 3  ! NTMD: size of buffers for each call to pack subtype
       CALL TMD_PackInput( Re_Buf, Db_Buf, Int_Buf, InData%NTMD, ErrStat2, ErrMsg2, .TRUE. ) ! NTMD 
         CALL SetErrStat(ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName)
@@ -6561,7 +6613,31 @@ ENDIF
     Int_BufSz   = Int_BufSz   + 2*1  ! SuperController upper/lower bounds for each dimension
       Re_BufSz   = Re_BufSz   + SIZE(InData%SuperController)  ! SuperController
   END IF
-  IF ( Re_BufSz  .GT. 0 ) THEN 
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmPitch
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmRVyt
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmRAyt
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmRoll
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmRVxt
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmRAxt
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmYaw
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmRVzt
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmRAzt
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmSway
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmSurge
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmHeave
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmTVyi
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmTVxi
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmTVzi
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmTAyi
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmTAxi
+      Re_BufSz   = Re_BufSz   + 1  ! PtfmTAzi
+      Re_BufSz   = Re_BufSz   + 1  ! YawBrRDyp
+      Re_BufSz   = Re_BufSz   + 1  ! YawBrRDxp
+      Re_BufSz   = Re_BufSz   + 1  ! YawBrRDzp
+      Re_BufSz   = Re_BufSz   + 1  ! YawBrRVyp
+      Re_BufSz   = Re_BufSz   + 1  ! YawBrRVxp
+      Re_BufSz   = Re_BufSz   + 1  ! YawBrRVzp
+  IF ( Re_BufSz  .GT. 0 ) THEN
      ALLOCATE( ReKiBuf(  Re_BufSz  ), STAT=ErrStat2 )
      IF (ErrStat2 /= 0) THEN 
        CALL SetErrStat(ErrID_Fatal, 'Error allocating ReKiBuf.', ErrStat, ErrMsg,RoutineName)
@@ -6755,6 +6831,54 @@ ENDIF
         Re_Xferred = Re_Xferred + 1
       END DO
   END IF
+       ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmPitch
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmRVyt
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmRAyt
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmRoll
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmRVxt
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmRAxt
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmYaw
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmRVzt
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmRAzt
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmSway
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmSurge
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmHeave
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmTVyi
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmTVxi
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmTVzi
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmTAyi
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmTAxi
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%PtfmTAzi
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%YawBrRDyp
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%YawBrRDxp
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%YawBrRDzp
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%YawBrRVyp
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%YawBrRVxp
+      Re_Xferred   = Re_Xferred   + 1
+      ReKiBuf ( Re_Xferred:Re_Xferred+(1)-1 ) = InData%YawBrRVzp
+      Re_Xferred   = Re_Xferred   + 1
  END SUBROUTINE SrvD_PackInput
 
  SUBROUTINE SrvD_UnPackInput( ReKiBuf, DbKiBuf, IntKiBuf, Outdata, ErrStat, ErrMsg )
@@ -6890,6 +7014,10 @@ ENDIF
     Re_Xferred = Re_Xferred + 1
     OutData%YawAngle = ReKiBuf(Re_Xferred)
     Re_Xferred = Re_Xferred + 1
+    OutData%ElecPwr_prev = ReKiBuf( Re_Xferred )
+    Re_Xferred   = Re_Xferred + 1
+    OutData%GenTrq_prev = ReKiBuf( Re_Xferred )
+    Re_Xferred   = Re_Xferred + 1
       Buf_size=IntKiBuf( Int_Xferred )
       Int_Xferred = Int_Xferred + 1
       IF(Buf_size > 0) THEN
@@ -6988,6 +7116,54 @@ ENDIF
         Re_Xferred = Re_Xferred + 1
       END DO
   END IF
+       OutData%PtfmPitch = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmRVyt = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmRAyt = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmRoll = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmRVxt = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmRAxt = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmYaw = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmRVzt = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmRAzt = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmSway = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmSurge = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmHeave = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmTVyi = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmTVxi = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmTVzi = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmTAyi = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmTAxi = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%PtfmTAzi = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%YawBrRDyp = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%YawBrRDxp = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%YawBrRDzp = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%YawBrRVyp = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%YawBrRVxp = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
+      OutData%YawBrRVzp = ReKiBuf( Re_Xferred )
+      Re_Xferred   = Re_Xferred + 1
  END SUBROUTINE SrvD_UnPackInput
 
  SUBROUTINE SrvD_CopyOutput( SrcOutputData, DstOutputData, CtrlCode, ErrStat, ErrMsg )
@@ -7755,6 +7931,54 @@ IF (ALLOCATED(u_out%SuperController) .AND. ALLOCATED(u1%SuperController)) THEN
     u_out%SuperController(i1) = u1%SuperController(i1) + b * ScaleFactor
   END DO
 END IF ! check if allocated
+  b0 = -(u1%PtfmPitch - u2%PtfmPitch)/t(2)
+  u_out%PtfmPitch = u1%PtfmPitch + b0 * t_out
+  b0 = -(u1%PtfmRVyt - u2%PtfmRVyt)/t(2)
+  u_out%PtfmRVyt = u1%PtfmRVyt + b0 * t_out
+  b0 = -(u1%PtfmRAyt - u2%PtfmRAyt)/t(2)
+  u_out%PtfmRAyt = u1%PtfmRAyt + b0 * t_out
+  b0 = -(u1%PtfmRoll - u2%PtfmRoll)/t(2)
+  u_out%PtfmRoll = u1%PtfmRoll + b0 * t_out
+  b0 = -(u1%PtfmRVxt - u2%PtfmRVxt)/t(2)
+  u_out%PtfmRVxt = u1%PtfmRVxt + b0 * t_out
+  b0 = -(u1%PtfmRAxt - u2%PtfmRAxt)/t(2)
+  u_out%PtfmRAxt = u1%PtfmRAxt + b0 * t_out
+  b0 = -(u1%PtfmYaw - u2%PtfmYaw)/t(2)
+  u_out%PtfmYaw = u1%PtfmYaw + b0 * t_out
+  b0 = -(u1%PtfmRVzt - u2%PtfmRVzt)/t(2)
+  u_out%PtfmRVzt = u1%PtfmRVzt + b0 * t_out
+  b0 = -(u1%PtfmRAzt - u2%PtfmRAzt)/t(2)
+  u_out%PtfmRAzt = u1%PtfmRAzt + b0 * t_out
+  b0 = -(u1%PtfmSway - u2%PtfmSway)/t(2)
+  u_out%PtfmSway = u1%PtfmSway + b0 * t_out
+  b0 = -(u1%PtfmSurge - u2%PtfmSurge)/t(2)
+  u_out%PtfmSurge = u1%PtfmSurge + b0 * t_out
+  b0 = -(u1%PtfmHeave - u2%PtfmHeave)/t(2)
+  u_out%PtfmHeave = u1%PtfmHeave + b0 * t_out
+  b0 = -(u1%PtfmTVyi - u2%PtfmTVyi)/t(2)
+  u_out%PtfmTVyi = u1%PtfmTVyi + b0 * t_out
+  b0 = -(u1%PtfmTVxi - u2%PtfmTVxi)/t(2)
+  u_out%PtfmTVxi = u1%PtfmTVxi + b0 * t_out
+  b0 = -(u1%PtfmTVzi - u2%PtfmTVzi)/t(2)
+  u_out%PtfmTVzi = u1%PtfmTVzi + b0 * t_out
+  b0 = -(u1%PtfmTAyi - u2%PtfmTAyi)/t(2)
+  u_out%PtfmTAyi = u1%PtfmTAyi + b0 * t_out
+  b0 = -(u1%PtfmTAxi - u2%PtfmTAxi)/t(2)
+  u_out%PtfmTAxi = u1%PtfmTAxi + b0 * t_out
+  b0 = -(u1%PtfmTAzi - u2%PtfmTAzi)/t(2)
+  u_out%PtfmTAzi = u1%PtfmTAzi + b0 * t_out
+  b0 = -(u1%YawBrRDyp - u2%YawBrRDyp)/t(2)
+  u_out%YawBrRDyp = u1%YawBrRDyp + b0 * t_out
+  b0 = -(u1%YawBrRDxp - u2%YawBrRDxp)/t(2)
+  u_out%YawBrRDxp = u1%YawBrRDxp + b0 * t_out
+  b0 = -(u1%YawBrRDzp - u2%YawBrRDzp)/t(2)
+  u_out%YawBrRDzp = u1%YawBrRDzp + b0 * t_out
+  b0 = -(u1%YawBrRVyp - u2%YawBrRVyp)/t(2)
+  u_out%YawBrRVyp = u1%YawBrRVyp + b0 * t_out
+  b0 = -(u1%YawBrRVxp - u2%YawBrRVxp)/t(2)
+  u_out%YawBrRVxp = u1%YawBrRVxp + b0 * t_out
+  b0 = -(u1%YawBrRVzp - u2%YawBrRVzp)/t(2)
+  u_out%YawBrRVzp = u1%YawBrRVzp + b0 * t_out
  END SUBROUTINE SrvD_Input_ExtrapInterp1
 
 
@@ -7920,6 +8144,78 @@ IF (ALLOCATED(u_out%SuperController) .AND. ALLOCATED(u1%SuperController)) THEN
     u_out%SuperController(i1) = u1%SuperController(i1) + b  + c * t_out
   END DO
 END IF ! check if allocated
+  b0 = (t(3)**2*(u1%PtfmPitch - u2%PtfmPitch) + t(2)**2*(-u1%PtfmPitch + u3%PtfmPitch))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmPitch + t(3)*u2%PtfmPitch - t(2)*u3%PtfmPitch ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmPitch = u1%PtfmPitch + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmRVyt - u2%PtfmRVyt) + t(2)**2*(-u1%PtfmRVyt + u3%PtfmRVyt))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmRVyt + t(3)*u2%PtfmRVyt - t(2)*u3%PtfmRVyt ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmRVyt = u1%PtfmRVyt + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmRAyt - u2%PtfmRAyt) + t(2)**2*(-u1%PtfmRAyt + u3%PtfmRAyt))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmRAyt + t(3)*u2%PtfmRAyt - t(2)*u3%PtfmRAyt ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmRAyt = u1%PtfmRAyt + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmRoll - u2%PtfmRoll) + t(2)**2*(-u1%PtfmRoll + u3%PtfmRoll))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmRoll + t(3)*u2%PtfmRoll - t(2)*u3%PtfmRoll ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmRoll = u1%PtfmRoll + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmRVxt - u2%PtfmRVxt) + t(2)**2*(-u1%PtfmRVxt + u3%PtfmRVxt))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmRVxt + t(3)*u2%PtfmRVxt - t(2)*u3%PtfmRVxt ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmRVxt = u1%PtfmRVxt + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmRAxt - u2%PtfmRAxt) + t(2)**2*(-u1%PtfmRAxt + u3%PtfmRAxt))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmRAxt + t(3)*u2%PtfmRAxt - t(2)*u3%PtfmRAxt ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmRAxt = u1%PtfmRAxt + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmYaw - u2%PtfmYaw) + t(2)**2*(-u1%PtfmYaw + u3%PtfmYaw))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmYaw + t(3)*u2%PtfmYaw - t(2)*u3%PtfmYaw ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmYaw = u1%PtfmYaw + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmRVzt - u2%PtfmRVzt) + t(2)**2*(-u1%PtfmRVzt + u3%PtfmRVzt))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmRVzt + t(3)*u2%PtfmRVzt - t(2)*u3%PtfmRVzt ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmRVzt = u1%PtfmRVzt + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmRAzt - u2%PtfmRAzt) + t(2)**2*(-u1%PtfmRAzt + u3%PtfmRAzt))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmRAzt + t(3)*u2%PtfmRAzt - t(2)*u3%PtfmRAzt ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmRAzt = u1%PtfmRAzt + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmSway - u2%PtfmSway) + t(2)**2*(-u1%PtfmSway + u3%PtfmSway))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmSway + t(3)*u2%PtfmSway - t(2)*u3%PtfmSway ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmSway = u1%PtfmSway + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmSurge - u2%PtfmSurge) + t(2)**2*(-u1%PtfmSurge + u3%PtfmSurge))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmSurge + t(3)*u2%PtfmSurge - t(2)*u3%PtfmSurge ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmSurge = u1%PtfmSurge + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmHeave - u2%PtfmHeave) + t(2)**2*(-u1%PtfmHeave + u3%PtfmHeave))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmHeave + t(3)*u2%PtfmHeave - t(2)*u3%PtfmHeave ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmHeave = u1%PtfmHeave + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmTVyi - u2%PtfmTVyi) + t(2)**2*(-u1%PtfmTVyi + u3%PtfmTVyi))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmTVyi + t(3)*u2%PtfmTVyi - t(2)*u3%PtfmTVyi ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmTVyi = u1%PtfmTVyi + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmTVxi - u2%PtfmTVxi) + t(2)**2*(-u1%PtfmTVxi + u3%PtfmTVxi))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmTVxi + t(3)*u2%PtfmTVxi - t(2)*u3%PtfmTVxi ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmTVxi = u1%PtfmTVxi + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmTVzi - u2%PtfmTVzi) + t(2)**2*(-u1%PtfmTVzi + u3%PtfmTVzi))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmTVzi + t(3)*u2%PtfmTVzi - t(2)*u3%PtfmTVzi ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmTVzi = u1%PtfmTVzi + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmTAyi - u2%PtfmTAyi) + t(2)**2*(-u1%PtfmTAyi + u3%PtfmTAyi))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmTAyi + t(3)*u2%PtfmTAyi - t(2)*u3%PtfmTAyi ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmTAyi = u1%PtfmTAyi + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmTAxi - u2%PtfmTAxi) + t(2)**2*(-u1%PtfmTAxi + u3%PtfmTAxi))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmTAxi + t(3)*u2%PtfmTAxi - t(2)*u3%PtfmTAxi ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmTAxi = u1%PtfmTAxi + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%PtfmTAzi - u2%PtfmTAzi) + t(2)**2*(-u1%PtfmTAzi + u3%PtfmTAzi))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%PtfmTAzi + t(3)*u2%PtfmTAzi - t(2)*u3%PtfmTAzi ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%PtfmTAzi = u1%PtfmTAzi + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%YawBrRDyp - u2%YawBrRDyp) + t(2)**2*(-u1%YawBrRDyp + u3%YawBrRDyp))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%YawBrRDyp + t(3)*u2%YawBrRDyp - t(2)*u3%YawBrRDyp ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%YawBrRDyp = u1%YawBrRDyp + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%YawBrRDxp - u2%YawBrRDxp) + t(2)**2*(-u1%YawBrRDxp + u3%YawBrRDxp))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%YawBrRDxp + t(3)*u2%YawBrRDxp - t(2)*u3%YawBrRDxp ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%YawBrRDxp = u1%YawBrRDxp + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%YawBrRDzp - u2%YawBrRDzp) + t(2)**2*(-u1%YawBrRDzp + u3%YawBrRDzp))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%YawBrRDzp + t(3)*u2%YawBrRDzp - t(2)*u3%YawBrRDzp ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%YawBrRDzp = u1%YawBrRDzp + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%YawBrRVyp - u2%YawBrRVyp) + t(2)**2*(-u1%YawBrRVyp + u3%YawBrRVyp))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%YawBrRVyp + t(3)*u2%YawBrRVyp - t(2)*u3%YawBrRVyp ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%YawBrRVyp = u1%YawBrRVyp + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%YawBrRVxp - u2%YawBrRVxp) + t(2)**2*(-u1%YawBrRVxp + u3%YawBrRVxp))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%YawBrRVxp + t(3)*u2%YawBrRVxp - t(2)*u3%YawBrRVxp ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%YawBrRVxp = u1%YawBrRVxp + b0 * t_out + c0 * t_out**2
+  b0 = (t(3)**2*(u1%YawBrRVzp - u2%YawBrRVzp) + t(2)**2*(-u1%YawBrRVzp + u3%YawBrRVzp))/(t(2)*t(3)*(t(2) - t(3)))
+  c0 = ( (t(2)-t(3))*u1%YawBrRVzp + t(3)*u2%YawBrRVzp - t(2)*u3%YawBrRVzp ) / (t(2)*t(3)*(t(2) - t(3)))
+  u_out%YawBrRVzp = u1%YawBrRVzp + b0 * t_out + c0 * t_out**2
  END SUBROUTINE SrvD_Input_ExtrapInterp2
 
 
