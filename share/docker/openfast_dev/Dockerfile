@@ -14,30 +14,16 @@
 # limitations under the License.
 #
 
-FROM rafmudaf/openfast-ubuntu:dev
+FROM rafmudaf/openfast-ubuntu:v2.3.0
 
 # Move into the openfast directory and update
 WORKDIR /openfast
-RUN git fetch
-RUN git pull
-RUN git submodule update
+RUN git fetch && \
+    git checkout -b dev origin/dev && \
+    git submodule update
 
-# Move into the "build" directory and compile
+# Move into the "build" directory, remove the old reg tests, and compile
 WORKDIR /openfast/build
-RUN cmake ..
-RUN make -j4 install
-
-# Run the tests
-
-# BeamDyn-specific tests
-RUN ctest -VV -j7 bd_
-RUN ctest -VV beamdyn_utest
-
-# OpenFAST linearization tests
-RUN ctest -VV -j4 -L linear
-
-# Subset of OpenFAST regression tests; do not run
-## - 3, 4, 7, 14, 15, 16, since the free yaw is not well trusted
-## - 9 because its super sensitive
-## - 19, 20 because theyre too long
-RUN ctest -VV -j8 -I 1,1,1,2,5,6,8,10,11,12,13,17,18,21,22,23,24,25
+RUN rm -rf reg_tests && \
+    cmake .. && \
+    make -j4 install
