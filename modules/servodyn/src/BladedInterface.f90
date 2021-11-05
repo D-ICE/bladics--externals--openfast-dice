@@ -859,30 +859,30 @@ END IF
 ! Records L1 and onward are outputs [see Retrieve_avrSWAP()]
    
    !> Extra records needed for D-ICE controllers
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 0) = u%PtfmPitch !> Extra record 0: Platform pitch angle
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 1) = u%PtfmRVyt !> Extra record 1: Platform pitch velocity
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 2) = u%PtfmRAyt !> Extra record 2: Platform pitch acceleration
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 3) = u%PtfmRoll !> Extra record 3: Platform roll angle
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 4) = u%PtfmRVxt !> Extra record 4: Platform roll velocity
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 5) = u%PtfmRAxt !> Extra record 5: Platform roll acceleration
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 6) = u%PtfmYaw !> Extra record 6: Platform yaw angle
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 7) = u%PtfmRVzt !> Extra record 7: Platform yaw velocity
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 8) = u%PtfmRAzt !> Extra record 8: Platform yaw acceleration
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 9) = u%PtfmSway !> Extra record 9: Platform sway displacement
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 10) = u%PtfmSurge !> Extra record 10: Platform surge displacement
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 11) = u%PtfmHeave !> Extra record 11: Platform heave displacement
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 12) = u%PtfmTVyi !> Extra record 12: Platform sway velocity
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 13) = u%PtfmTVxi !> Extra record 13: Platform surge velocity
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 14) = u%PtfmTVzi !> Extra record 14: Platform heave velocity
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 15) = u%PtfmTAyi !> Extra record 15: Platform sway acceleration
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 16) = u%PtfmTAxi !> Extra record 16: Platform surge acceleration
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 17) = u%PtfmTAzi !> Extra record 17: Platform heave acceleration
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 18) = u%YawBrRDyp !> Extra record 18: Tower-top pitch position
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 19) = u%YawBrRDxp !> Extra record 19: Tower-top roll position
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 20) = u%YawBrRDzp !> Extra record 20: Tower-top torsion position
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 21) = u%YawBrRVyp !> Extra record 21: Tower-top pitch velocity
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 22) = u%YawBrRVxp !> Extra record 22: Tower-top roll velocity
-   dll_data%avrSWAP(R + 2*p%DLL_NumTrq + 23) = u%YawBrRVzp !> Extra record 23: Tower-top torsion velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 0) = u%PtfmPitch !> Extra record 0: Platform pitch angle
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 1) = u%PtfmRVyt !> Extra record 1: Platform pitch velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 2) = u%PtfmRAyt !> Extra record 2: Platform pitch acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 3) = u%PtfmRoll !> Extra record 3: Platform roll angle
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 4) = u%PtfmRVxt !> Extra record 4: Platform roll velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 5) = u%PtfmRAxt !> Extra record 5: Platform roll acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 6) = u%PtfmYaw !> Extra record 6: Platform yaw angle
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 7) = u%PtfmRVzt !> Extra record 7: Platform yaw velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 8) = u%PtfmRAzt !> Extra record 8: Platform yaw acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 9) = u%PtfmSway !> Extra record 9: Platform sway displacement
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 10) = u%PtfmSurge !> Extra record 10: Platform surge displacement
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 11) = u%PtfmHeave !> Extra record 11: Platform heave displacement
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 12) = u%PtfmTVyi !> Extra record 12: Platform sway velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 13) = u%PtfmTVxi !> Extra record 13: Platform surge velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 14) = u%PtfmTVzi !> Extra record 14: Platform heave velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 15) = u%PtfmTAyi !> Extra record 15: Platform sway acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 16) = u%PtfmTAxi !> Extra record 16: Platform surge acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 17) = u%PtfmTAzi !> Extra record 17: Platform heave acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 18) = u%YawBrRDyp !> Extra record 18: Tower-top pitch position
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 19) = u%YawBrRDxp !> Extra record 19: Tower-top roll position
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 20) = u%YawBrRDzp !> Extra record 20: Tower-top torsion position
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 21) = u%YawBrRVyp !> Extra record 21: Tower-top pitch velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 22) = u%YawBrRVxp !> Extra record 22: Tower-top roll velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 23) = u%YawBrRVzp !> Extra record 23: Tower-top torsion velocity
    
    
    
