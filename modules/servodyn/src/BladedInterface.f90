@@ -120,6 +120,9 @@ MODULE BladedInterface
    !! GH_DISCON_YAW_CONTROL    -  Flag to represent whether the yaw is controlled by rate or torque. 
    INTEGER(IntKi), PARAMETER :: GH_DISCON_YAW_CONTROL_RATE = 0        !  Uses the yaw rate demand to control yaw. 
    INTEGER(IntKi), PARAMETER :: GH_DISCON_YAW_CONTROL_TORQUE = 1        !  Uses the yaw torque demand to control yaw. 
+   
+   INTEGER(IntKi), PARAMETER    :: N_EXTRA_RECORDS = 24 !< Number of extra records after generator speed look-up table
+            
 
 CONTAINS
 !==================================================================================================================================
@@ -365,7 +368,7 @@ SUBROUTINE BladedInterface_Init(u, p, m, y, InputFileData, InitInp, ErrStat, Err
     ! Set status flag and initialize avrSWAP:
    m%dll_data%SimStatus = GH_DISCON_STATUS_INITIALISING
    
-   CALL AllocAry( m%dll_data%avrSwap,   R+(2*m%dll_data%DLL_NumTrq)-1 + MaxLoggingChannels, 'avrSwap', ErrStat2, ErrMsg2 )
+   CALL AllocAry( m%dll_data%avrSwap,   R+(2*m%dll_data%DLL_NumTrq)-1 + MaxLoggingChannels + N_EXTRA_RECORDS, 'avrSwap', ErrStat2, ErrMsg2 ) ! Allocate memory for avrSwap, counting extra fields for D-ICE controllers
       CALL CheckError(ErrStat2,ErrMsg2)
       IF ( ErrStat >= AbortErrLev ) RETURN
    m%dll_data%avrSWAP = 0.0
@@ -766,7 +769,7 @@ SUBROUTINE Fill_avrSWAP( t, u, p, ErrMsgSz, dll_data )
    dll_data%avrSWAP(23) = dll_data%GenTrq_prev              !> * Record 23: Measured generator torque (Nm) [SrvD calculation from previous step; should technically be a state]
    dll_data%avrSWAP(24) = u%YawErr                          !> * Record 24: Measured yaw error (rad) [SrvD input]
    IF ( dll_data%DLL_NumTrq == 0 )  THEN  ! Torque-speed table look-up not selected
-      dll_data%avrSWAP(25) = 0.0                            ! Start of below-rated torque-speed look-up table (record no.) -- 0.0 indicates that torque-speed table look-up is not selected
+      dll_data%avrSWAP(25) = R                            ! Start of below-rated torque-speed look-up table (record no.) -- 0.0 indicates that torque-speed table look-up is not selected
    ELSE                 ! Torque-speed table look-up selected
       dll_data%avrSWAP(25) = R                              !> * Record 25: Start of below-rated torque-speed look-up table (record no.) [parameter \f$R\f$ (bladedinterface::r) or 0 if DLL_NumTrq == 0]
    ENDIF
@@ -793,6 +796,7 @@ END IF
    dll_data%avrSWAP(49) = ErrMsgSz + 1                      !> * Record 49: Maximum number of characters in the "MESSAGE" argument (-) [size of ErrMsg argument plus 1 (we add one for the C NULL CHARACTER)]
    dll_data%avrSWAP(50) = LEN_TRIM(dll_data%DLL_InFile) +1  !> * Record 50: Number of characters in the "INFILE"  argument (-) [trimmed length of DLL_InFile parameter plus 1 (we add one for the C NULL CHARACTER)]
    dll_data%avrSWAP(51) = LEN_TRIM(dll_data%RootName)   +1  !> * Record 51: Number of characters in the "OUTNAME" argument (-) [trimmed length of RootName parameter plus 1 (we add one for the C NULL CHARACTER)]
+   dll_data%avrSWAP(52) = 1024 * N_EXTRA_RECORDS            !> * Record 52: DLL interface version number. Take account the number of extra records for D-ICE controllers.
 ! Record 52 is reserved for future use                      ! DLL interface version number (-)
    dll_data%avrSWAP(53) = u%YawBrTAxp                       !> * Record 53: Tower top fore-aft     acceleration (m/s^2) [SrvD input]
    dll_data%avrSWAP(54) = u%YawBrTAyp                       !> * Record 54: Tower top side-to-side acceleration (m/s^2) [SrvD input]
@@ -849,6 +853,32 @@ END IF
 !> * Records 120-129: User-defined variables 1-10; ignored in ServoDyn
 ! Records 130-142 are outputs [see Retrieve_avrSWAP()]   
 ! Records L1 and onward are outputs [see Retrieve_avrSWAP()]
+   
+   !> Extra records needed for D-ICE controllers
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 0) = u%PtfmPitch !> Extra record 0: Platform pitch angle
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 1) = u%PtfmRVyt !> Extra record 1: Platform pitch velocity
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 2) = u%PtfmRAyt !> Extra record 2: Platform pitch acceleration
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 3) = u%PtfmRoll !> Extra record 3: Platform roll angle
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 4) = u%PtfmRVxt !> Extra record 4: Platform roll velocity
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 5) = u%PtfmRAxt !> Extra record 5: Platform roll acceleration
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 6) = u%PtfmYaw !> Extra record 6: Platform yaw angle
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 7) = u%PtfmRVzt !> Extra record 7: Platform yaw velocity
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 8) = u%PtfmRAzt !> Extra record 8: Platform yaw acceleration
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 9) = u%PtfmSway !> Extra record 9: Platform sway displacement
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 10) = u%PtfmSurge !> Extra record 10: Platform surge displacement
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 11) = u%PtfmHeave !> Extra record 11: Platform heave displacement
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 12) = u%PtfmTVyi !> Extra record 12: Platform sway velocity
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 13) = u%PtfmTVxi !> Extra record 13: Platform surge velocity
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 14) = u%PtfmTVzi !> Extra record 14: Platform heave velocity
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 15) = u%PtfmTAyi !> Extra record 15: Platform sway acceleration
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 16) = u%PtfmTAxi !> Extra record 16: Platform surge acceleration
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 17) = u%PtfmTAzi !> Extra record 17: Platform heave acceleration
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 18) = u%YawBrRDyp !> Extra record 18: Tower-top pitch position
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 19) = u%YawBrRDxp !> Extra record 19: Tower-top roll position
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 20) = u%YawBrRDzp !> Extra record 20: Tower-top torsion position
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 21) = u%YawBrRVyp !> Extra record 21: Tower-top pitch velocity
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 22) = u%YawBrRVxp !> Extra record 22: Tower-top roll velocity
+   dll_data%avrSWAP(R + MaxLoggingChannels + 2*dll_data%DLL_NumTrq + 23) = u%YawBrRVzp !> Extra record 23: Tower-top torsion velocity
    
    
    

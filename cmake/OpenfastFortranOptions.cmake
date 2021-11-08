@@ -61,7 +61,7 @@ macro(set_fast_fortran)
   endif()
 
   # Force all .mod files to be stored in a single directory
-  set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/ftnmods"
+  set(CMAKE_Fortran_MODULE_DIRECTORY "${OpenFAST_BINARY_DIR}/ftnmods"
     CACHE STRING "Set the Fortran Modules directory" FORCE)
   include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
