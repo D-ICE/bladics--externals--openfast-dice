@@ -1,6 +1,8 @@
 OpenFAST
 ========
 
+[D-ICE notes at the end of this README.]
+
 |travisci| |nbsp| |rtfd|
 
 .. |travisci| image:: https://travis-ci.org/OpenFAST/openfast.svg?branch=dev
@@ -146,3 +148,164 @@ organizations:
 * Envision Energy USA, Ltd
 * Brigham Young University
 * `Intel® Parallel Computing Center (IPCC) <https://software.intel.com/en-us/ipcc>`_
+
+
+D-ICE notes
+===========
+
+Be sure to clone the repo with the `--recursive` flag or execute `git submodule update --init --recursive` after cloning.
+
+A lot of information presented here comes from official documentation.
+Take a look at `OpenFAST repository <https://github.com/OpenFAST/openfast>`_, `OpenFAST regression test repository <https://github.com/OpenFAST/r-test>`_ and `OpenFAST documentation <https://openfast.readthedocs.io/en/master/>`_.
+
+D-ICE developments
+------------------
+
+This repository is a fork of NREL OpenFAST repository.
+It comes with two branches: `master` and `dev`.
+These two branches should contains only NREL developments.
+D-ICE developments should be placed in branches named like `release/d-ice/v2.2.0` and tagged like `v2.2.0dN`, where N is an integer starting with one.
+Previous D-ICE developments were made in `dice-master` and `dice-develop` branches which are not used anymore and are keeped for reference.
+
+Tag messages contains the number of extra fields provided to the control DLL.
+These fields are defined in `Extra fields list <https://docs.google.com/spreadsheets/d/1PBy9wt_UqrduLDbEXzUffBTUJrWkqeMuc6KeQUxHr-g>`_ sheet on google drive.
+
+Compilation and test on linux
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Compilation
+"""""""""""
+
+On linux, you will need blas and lapack in order to compile openfast.
+You can install them with the command:
+
+`sudo apt install liblapack-dev libblas-dev`
+
+Then type the following commands in a terminal:
+
+.. code-block:: bash
+
+  # create a directory called `build`
+  mkdir build
+
+  # go to the build directory
+  cd build
+
+  # execute CMake with testing build, generate types and orca dll options activated
+  cmake .. -DBUILD_TESTING=ON -DGENERATE_TYPES=ON -DORCA_DLL_LOAD=ON
+
+  # execute a make command (with no target provided, equivalent to `make all`)
+  # Replace N by the number of concurrent compilation processus
+  make -j N
+
+
+OpenFAST executable is located at `./build/glue-codes/openfast`.
+
+Official NREL Tests
+"""""""""""""""""""
+
+You may want to execute some regression tests.
+
+Before executing tests for 5MW turbines, you need to copy controller libraries. Execute the following commands in `build` folder:
+
+.. code-block:: bash
+
+  cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON/build/DISCON.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON.dll
+  cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_ITI/build/DISCON_ITIBarge.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_ITIBarge.dll
+  cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3/build/DISCON_OC3Hywind.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3Hywind.dll
+  cp ../reg_tests/r-test/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3_DICE_EXTRA_TEST/build/DISCON_OC3Hywind_DICE_EXTRA_TEST.dll reg_tests/glue-codes/openfast/5MW_Baseline/ServoData/DISCON_OC3Hywind_DICE_EXTRA_TEST.dll
+
+
+To execute the test named *5MW_OC3Spar_DLL_WTurb_WavesIrr*, you have to execute the following command:
+
+`ctest -R ^5MW_OC3Spar_DLL_WTurb_WavesIrr$`
+
+In case of success, you get the following output:
+
+.. code-block:: bash
+
+    $ ctest -R 5MW_OC3Spar_DLL_WTurb_WavesIrr
+    Test project /home/benjaminm/projects/bladics/externals/openfast-dice/build
+        Start 23: 5MW_OC3Spar_DLL_WTurb_WavesIrr
+    1/1 Test #23: 5MW_OC3Spar_DLL_WTurb_WavesIrr ...   Passed   52.75 sec
+    
+    100% tests passed, 0 tests failed out of 1
+    
+    Label Time Summary:
+    aerodyn15    =  52.75 sec*proc (1 test)
+    elastodyn    =  52.75 sec*proc (1 test)
+    hydrodyn     =  52.75 sec*proc (1 test)
+    map          =  52.75 sec*proc (1 test)
+    openfast     =  52.75 sec*proc (1 test)
+    servodyn     =  52.75 sec*proc (1 test)
+    
+    Total Test time (real) =  52.75 sec
+
+In case of failure, you get the following output:
+
+.. code-block:: bash
+
+    $ ctest -R 5MW_OC3Spar_DLL_WTurb_WavesIrr
+    Test project /home/benjaminm/projects/bladics/externals/openfast-dice/build
+        Start 23: 5MW_OC3Spar_DLL_WTurb_WavesIrr
+    1/1 Test #23: 5MW_OC3Spar_DLL_WTurb_WavesIrr ...***Failed   52.36 sec
+    
+    0% tests passed, 1 tests failed out of 1
+    
+    Label Time Summary:
+    aerodyn15    =  52.36 sec*proc (1 test)
+    elastodyn    =  52.36 sec*proc (1 test)
+    hydrodyn     =  52.36 sec*proc (1 test)
+    map          =  52.36 sec*proc (1 test)
+    openfast     =  52.36 sec*proc (1 test)
+    servodyn     =  52.36 sec*proc (1 test)
+    
+    Total Test time (real) =  52.36 sec
+    
+    The following tests FAILED:
+    	 23 - 5MW_OC3Spar_DLL_WTurb_WavesIrr (Failed)
+    Errors while running CTest
+
+It can fail as OpenFAST behavior depends on OS but also on compilator and blas version. In that case, you may need to change references of regression test.
+
+Here is a script which modify regression test reference for 5MW_OC3Spar_DLL_WTurb_WavesIrr test with linux and gfortran:
+
+.. code-block:: bash
+
+  # go to 5MW_OC3Spar_DLL_WTurb_WavesIrr regression test folder
+  cd ../reg_tests/r-test/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr
+
+  # make a backup of reference results
+  mkdir linux-gnu_backup
+  mv linux-gnu/* linux-gnu_backup/
+
+  # go back to build folder
+  cd -
+
+  # copy new references which have been generated when calling ctest
+  cp reg_tests/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/* ../reg_tests/r-test/glue-codes/openfast/5MW_OC3Spar_DLL_WTurb_WavesIrr/linux-gnu/
+
+D-ICE Tests
+"""""""""""
+
+Specific tests have been created for validating D-ICE developments.
+
+`DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr` tests augmentation of BladedInterface with extra fields. It relies on a specific DLL which logs values of extra fields in a csv file. If simulation went fine, user can manually check differences between log from DLL and log from OpenFAST executable.
+
+In build folder, do the following in order to create reference files:
+
+.. code-block:: bash
+
+  mkdir ../reg_tests/r-test/glue-codes/openfast/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr/linux-gnu/
+  ctest -R ^DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr$
+  cp reg_tests/glue-codes/openfast/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr/* ../reg_tests/r-test/glue-codes/openfast/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr/linux-gnu/
+
+Then after copy, the test should pass:
+
+.. code-block:: bash
+
+  ctest -R ^DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr$
+
+Now, you can access csv log file in `reg_tests/extra_records.csv` and compare it to output from fast at 
+`reg_tests/glue-codes/openfast/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr/DICE_EXTRA_TEST_5MW_OC3Spar_DLL_WTurb_WavesIrr.out`.
+

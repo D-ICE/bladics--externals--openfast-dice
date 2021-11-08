@@ -24,7 +24,7 @@ project(OpenFAST_RegressionTest Fortran)
 include(CTest)
 
 # Store the CTest build directory
-set(CTEST_BINARY_DIR "${CMAKE_BINARY_DIR}/reg_tests")
+set(CTEST_BINARY_DIR "${OpenFAST_BINARY_DIR}/reg_tests")
 
 # Verify that the test data submodule exists
 if(NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/r-test")
@@ -35,10 +35,10 @@ endif()
 option(CTEST_PLOT_ERRORS "Generate plots of regression test errors." OFF)
 
 # Set the OpenFAST executable configuration option and default
-set(CTEST_OPENFAST_EXECUTABLE "${CMAKE_BINARY_DIR}/glue-codes/openfast/openfast" CACHE FILEPATH "Specify the OpenFAST executable to use in testing.")
+set(CTEST_OPENFAST_EXECUTABLE "${OpenFAST_BINARY_DIR}/glue-codes/openfast/openfast" CACHE FILEPATH "Specify the OpenFAST executable to use in testing.")
 
 # Set the BeamDyn executable configuration option and default
-set(CTEST_BEAMDYN_EXECUTABLE "${CMAKE_BINARY_DIR}/modules/beamdyn/beamdyn_driver" CACHE FILEPATH "Specify the BeamDyn driver executable to use in testing.")
+set(CTEST_BEAMDYN_EXECUTABLE "${OpenFAST_BINARY_DIR}/modules/beamdyn/beamdyn_driver" CACHE FILEPATH "Specify the BeamDyn driver executable to use in testing.")
 
 # Set the python executable configuration option and default
 if(NOT EXISTS ${PYTHON_EXECUTABLE})
