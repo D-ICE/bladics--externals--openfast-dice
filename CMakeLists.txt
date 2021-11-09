@@ -17,10 +17,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(OpenFAST CXX C Fortran)
 
-include(${CMAKE_SOURCE_DIR}/cmake/OpenfastCmakeUtils.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/OpenfastFortranOptions.cmake)
+include(${OpenFAST_SOURCE_DIR}/cmake/OpenfastCmakeUtils.cmake)
+include(${OpenFAST_SOURCE_DIR}/cmake/OpenfastFortranOptions.cmake)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${OpenFAST_SOURCE_DIR}/cmake")
 
 # CMake Configuration variables
 if (NOT CMAKE_BUILD_TYPE)
@@ -111,11 +111,11 @@ set(OPENFAST_REGISTRY_INCLUDES "" CACHE INTERNAL "Registry includes paths")
 set_registry_includes("modules" ${OPENFAST_MODULES})
 # Fix non-standard path addition to OPENFAST_REGISTRY_INCLUDES in icefloe module
 set(OPENFAST_REGISTRY_INCLUDES
-  ${OPENFAST_REGISTRY_INCLUDES} -I ${CMAKE_SOURCE_DIR}/modules/icefloe/src/interfaces/FAST/
+  ${OPENFAST_REGISTRY_INCLUDES} -I ${OpenFAST_SOURCE_DIR}/modules/icefloe/src/interfaces/FAST/
   CACHE INTERNAL "Registry includes paths")
 
 foreach(IDIR IN ITEMS ${OPENFAST_MODULES})
-  add_subdirectory("${CMAKE_SOURCE_DIR}/modules/${IDIR}")
+  add_subdirectory("${OpenFAST_SOURCE_DIR}/modules/${IDIR}")
 endforeach(IDIR IN ITEMS ${OPENFAST_MODULES})
 
 add_subdirectory(glue-codes)
@@ -125,9 +125,9 @@ install(CODE
   "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/openfast/\")")
 
 # Install the library dependency information
-install(EXPORT OpenFASTLibraries
-  DESTINATION lib/cmake/OpenFAST
-  FILE OpenFASTLibraries.cmake)
+#install(EXPORT OpenFASTLibraries
+#  DESTINATION lib/cmake/OpenFAST
+#  FILE OpenFASTLibraries.cmake)
 
 # Create OpenFAST config so that other codes can find OpenFAST
 include(CMakePackageConfigHelpers)
@@ -152,7 +152,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenFASTConfig.cmake
 ########################################################################
 # Configure the default install path to openfast/install
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH
+  set(CMAKE_INSTALL_PREFIX "${OpenFAST_SOURCE_DIR}/install" CACHE PATH
     "OpenFAST install directory" FORCE)
 endif()
 

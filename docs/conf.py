@@ -37,7 +37,7 @@ def runDoxygen(sourcfile, doxyfileIn, doxyfileOut):
     cfg = dx.read()
     srcdir = os.path.abspath(os.path.join(os.getcwd(), '..'))
     bindir = srcdir
-    c2 = re.sub('@CMAKE_SOURCE_DIR@', srcdir, re.sub('@CMAKE_BINARY_DIR@', bindir, cfg))
+    c2 = re.sub('@OpenFAST_SOURCE_DIR@', srcdir, re.sub('@OpenFAST_BINARY_DIR@', bindir, cfg))
     doxname = os.path.join(sourcedir, doxyfileOut)
     dox = open(doxname, 'w')
     print(c2, file=dox)
