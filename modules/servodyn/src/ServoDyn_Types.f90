@@ -395,6 +395,30 @@ IMPLICIT NONE
     TYPE(TMD_InputType)  :: NTMD      !< TMD module inputs - nacelle [-]
     TYPE(TMD_InputType)  :: TTMD      !< TMD module inputs - tower [-]
     REAL(SiKi) , DIMENSION(:), ALLOCATABLE  :: SuperController      !< A swap array: used to pass input data to the DLL controller from the supercontroller [-]
+    REAL(ReKI)  :: PtfmPitch	! "Platform pitch tilt angular (rotational) displacement"	radians
+    REAL(ReKI)  :: PtfmRVyt	! "Platform pitch tilt angular (rotational) velocity"	rad/s
+    REAL(ReKI)  :: PtfmRAyt	! "Platform pitch tilt angular (rotational) acceleration"	rad/s^2
+    REAL(ReKI)  :: PtfmRoll	! "Platform roll tilt angular (rotational) displacement"	radians
+    REAL(ReKI)  :: PtfmRVxt	! "Platform roll tilt angular (rotational) velocity"	rad/s
+    REAL(ReKI)  :: PtfmRAxt	! "Platform roll tilt angular (rotational) acceleration"	rad/s^2
+    REAL(ReKI)  :: PtfmYaw	! "Platform yaw tilt angular (rotational) displacement"	radians
+    REAL(ReKI)  :: PtfmRVzt	! "Platform yaw tilt angular (rotational) velocity"	rad/s
+    REAL(ReKI)  :: PtfmRAzt	! "Platform yaw tilt angular (rotational) acceleration"	rad/s^2
+    REAL(ReKI)  :: PtfmSway	! "Platform horizontal sway (translational) displacement"	m
+    REAL(ReKI)  :: PtfmSurge	! "Platform horizontal surge (translational) displacement"	m
+    REAL(ReKI)  :: PtfmHeave	! "Platform vertical heave (translational) displacement"	m
+    REAL(ReKI)  :: PtfmTVyi	! "Platform horizontal sway (translational) velocity" m/s
+    REAL(ReKI)  :: PtfmTVxi	! "Platform horizontal surge (translational) velocity" m/s
+    REAL(ReKI)  :: PtfmTVzi	! "Platform vertical heave (translational) velocity" m/s
+    REAL(ReKI)  :: PtfmTAyi	! "Platform horizontal sway (translational) acceleration" m/s^2
+    REAL(ReKI)  :: PtfmTAxi	! "Platform horizontal surge (translational) acceleration" m/s^2
+    REAL(ReKI)  :: PtfmTAzi	! "Platform vertical heave (translational) acceleration" m/s^2
+    REAL(ReKI)  :: YawBrRDyp	! "Tower-top / yaw bearing angular (rotational) pitch position (absolute)" rad
+    REAL(ReKI)  :: YawBrRDxp	! "Tower-top / yaw bearing angular (rotational) roll position (absolute)" rad
+    REAL(ReKI)  :: YawBrRDzp	! "Tower-top / yaw bearing angular (rotational) torsion position (absolute)" rad
+    REAL(ReKI)  :: YawBrRVyp	! "Tower-top / yaw bearing angular (rotational) pitch velocity (absolute)" rad/s
+    REAL(ReKI)  :: YawBrRVxp	! "Tower-top / yaw bearing angular (rotational) roll velocity (absolute)" rad/s
+    REAL(ReKI)  :: YawBrRVzp	! "Tower-top / yaw bearing angular (rotational) torsion velocity (absolute)" rad/s
   END TYPE SrvD_InputType
 ! =======================
 ! =========  SrvD_OutputType  =======

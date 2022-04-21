@@ -60,17 +60,17 @@ MODULE BladedInterface
       
       FUNCTION BladedDLL_CONTROLLER_Procedure ( turbine_id ) BIND (C) ! from Bladed 4.8 API
          USE, INTRINSIC :: ISO_C_Binding
-         
+
 !        INTEGER(C_SIZE_T), VALUE, INTENT(IN   ) :: turbine_id                           ! pointer (address) of data from Bladed or ENFAST that is required to be used in ExternalControllerApi.dll (as written in Bladed's API)
          TYPE(C_PTR), VALUE, INTENT(IN   )       :: turbine_id                           ! pointer (address) of data from Bladed or ENFAST that is required to be used in ExternalControllerApi.dll (using standard Fortran nomenclature for ISO C BINDING)
          INTEGER(C_INT)                          :: BladedDLL_CONTROLLER_Procedure       ! an integer determining the status of the call (see aviFAIL)
-         
+
       END FUNCTION BladedDLL_CONTROLLER_Procedure
 
    END INTERFACE
   
-   
-#ifdef STATIC_DLL_LOAD   
+
+#ifdef STATIC_DLL_LOAD
    INTERFACE
    
 #ifdef LOAD_SUPERCONTROLLER   
@@ -101,6 +101,8 @@ MODULE BladedInterface
    INTEGER(IntKi), PARAMETER    :: R_v4  = 145        !< Start of below-rated torque-speed look-up table (record no.) for Bladed version 3.8 - 4.2
    INTEGER(IntKi), PARAMETER    :: R_v43 = 165        !< Start of below-rated torque-speed look-up table (record no.) for Bladed version 4.3 and later
 
+INTEGER(IntKi), PARAMETER    :: N_EXTRA_RECORDS = 24 !< Number of extra records after generator speed look-up table
+            
    INTEGER(IntKi), PARAMETER    :: R = R_v43          !< start of the generator speed look-up table
 #ifdef STATIC_DLL_LOAD
    INTEGER(IntKi), PARAMETER    :: MaxLoggingChannels = 0
@@ -108,18 +110,18 @@ MODULE BladedInterface
    INTEGER(IntKi), PARAMETER    :: MaxLoggingChannels = 300
 #endif
 
-   !! GH_DISCON_SIMULATION_STATUS    - Flag returned by simulation from GetSimulationStatus.  Descriptions taken from the user manual. 
-   INTEGER(IntKi), PARAMETER :: GH_DISCON_STATUS_FINALISING    = -1       !  Final call at the end of the simulation. 
-   INTEGER(IntKi), PARAMETER :: GH_DISCON_STATUS_INITIALISING  =  0       !  First call at time zero. 
+   !! GH_DISCON_SIMULATION_STATUS    - Flag returned by simulation from GetSimulationStatus.  Descriptions taken from the user manual.
+   INTEGER(IntKi), PARAMETER :: GH_DISCON_STATUS_FINALISING    = -1       !  Final call at the end of the simulation.
+   INTEGER(IntKi), PARAMETER :: GH_DISCON_STATUS_INITIALISING  =  0       !  First call at time zero.
    INTEGER(IntKi), PARAMETER :: GH_DISCON_STATUS_DISCRETE_STEP =  1       !  Simulation discrete timestep.
    INTEGER(IntKi), PARAMETER :: GH_DISCON_STATUS_CHECKPOINT    = -8       !  Create a checkpoint file (extension to GH DISCON documentation)
    INTEGER(IntKi), PARAMETER :: GH_DISCON_STATUS_RESTARTING    = -9       !  Restart step (extension to GH DISCON documentation)
-   !! GH_DISCON_PITCH_CONTROL    - Flag to specify whether the pitch is controlled collectively or individually. 
-   INTEGER(IntKi), PARAMETER :: GH_DISCON_PITCH_CONTROL_COLLECTIVE = 0        !  Pitch is controlled collectively - use GetCollectivePitchAngle and SetDemandedCollectivePitchAngle. 
-   INTEGER(IntKi), PARAMETER :: GH_DISCON_PITCH_CONTROL_INDIVIDUAL = 1        !  Pitch is controlled on each blade individually - use GetPitchAngle and SetDemandedPitchAngle. 
-   !! GH_DISCON_YAW_CONTROL    -  Flag to represent whether the yaw is controlled by rate or torque. 
-   INTEGER(IntKi), PARAMETER :: GH_DISCON_YAW_CONTROL_RATE = 0        !  Uses the yaw rate demand to control yaw. 
-   INTEGER(IntKi), PARAMETER :: GH_DISCON_YAW_CONTROL_TORQUE = 1        !  Uses the yaw torque demand to control yaw. 
+   !! GH_DISCON_PITCH_CONTROL    - Flag to specify whether the pitch is controlled collectively or individually.
+   INTEGER(IntKi), PARAMETER :: GH_DISCON_PITCH_CONTROL_COLLECTIVE = 0        !  Pitch is controlled collectively - use GetCollectivePitchAngle and SetDemandedCollectivePitchAngle.
+   INTEGER(IntKi), PARAMETER :: GH_DISCON_PITCH_CONTROL_INDIVIDUAL = 1        !  Pitch is controlled on each blade individually - use GetPitchAngle and SetDemandedPitchAngle.
+   !! GH_DISCON_YAW_CONTROL    -  Flag to represent whether the yaw is controlled by rate or torque.
+   INTEGER(IntKi), PARAMETER :: GH_DISCON_YAW_CONTROL_RATE = 0        !  Uses the yaw rate demand to control yaw.
+   INTEGER(IntKi), PARAMETER :: GH_DISCON_YAW_CONTROL_TORQUE = 1        !  Uses the yaw torque demand to control yaw.
 
 CONTAINS
 !==================================================================================================================================
@@ -139,7 +141,7 @@ SUBROUTINE CallBladedDLL ( u, p, dll_data, ErrStat, ErrMsg, ChannelNameUnit )
    TYPE(C_PTR)                                        :: turbine_id
    TYPE(BladedDLLType), POINTER                       :: dll_data_PTR         ! pointer to data type containing the inputs for the Bladed DLL interface
 
-   
+
    if (p%UseLegacyInterface) then
       if (present(ChannelNameUnit)) then
          call CallBladedLegacyDLL ( u, p, dll_data, ErrStat, ErrMsg, ChannelNameUnit )
@@ -153,17 +155,17 @@ SUBROUTINE CallBladedDLL ( u, p, dll_data, ErrStat, ErrMsg, ChannelNameUnit )
       else
          ProcedureIndex = 1 ! normal call to CONTROLLER
       end if
-      
+
       CALL C_F_PROCPOINTER( p%DLL_Trgt%ProcAddr(ProcedureIndex), DLL_CONTROLLER)
       dll_data_PTR => dll_data
       turbine_id = C_LOC(dll_data_PTR)
 
       aviFAIL =  DLL_CONTROLLER ( turbine_id )
-      
+
          ! these values are set in the controller:
       ErrStat = dll_data%ErrStat
       ErrMsg  = dll_data%ErrMsg
-      
+
          ! but we must also check the return value from the controller function (i'd think they would be the same)
       IF ( aviFAIL /= 0 ) THEN
 
@@ -172,13 +174,13 @@ SUBROUTINE CallBladedDLL ( u, p, dll_data, ErrStat, ErrMsg, ChannelNameUnit )
          ELSE ! error
             ErrStat = ErrID_Fatal
          END IF
-         
+
       END IF
-      
+
       IF (ErrStat /= ErrID_None) THEN
          ErrMsg = trim(p%DLL_Trgt%ProcName(ProcedureIndex))//trim(ErrMsg)
       END IF
-      
+
    end if
 
    if ( dll_data%SimStatus == GH_DISCON_STATUS_FINALISING ) then
@@ -186,14 +188,14 @@ SUBROUTINE CallBladedDLL ( u, p, dll_data, ErrStat, ErrMsg, ChannelNameUnit )
    else
       dll_data%SimStatus = GH_DISCON_STATUS_DISCRETE_STEP
    end if
-   
+
 END SUBROUTINE CallBladedDLL
 !==================================================================================================================================
 SUBROUTINE CallBladedLegacyDLL ( u, p, dll_data, ErrStat, ErrMsg, ChannelNameUnit )
      ! Passed Variables:
    TYPE(SrvD_InputType),      INTENT(IN   )  :: u              ! System inputs
    TYPE(SrvD_ParameterType),  INTENT(IN   )  :: p              ! Parameters
-   TYPE(BladedDLLType),       INTENT(INOUT)  :: dll_data       ! data type containing the avrSWAP, accINFILE, and avcOUTNAME arrays 
+   TYPE(BladedDLLType),       INTENT(INOUT)  :: dll_data       ! data type containing the avrSWAP, accINFILE, and avcOUTNAME arrays
    !REAL(SiKi),                INTENT(INOUT)  :: avrSWAP   (*)  ! The swap array, used to pass data to, and receive data from, the DLL controller.
    !INTEGER(B1Ki),             INTENT(IN   )  :: accINFILE (*)  ! The address of the first record of an array of 1-byte CHARACTERs giving the name of the parameter input file, 'DISCON.IN'.
    !INTEGER(B1Ki),             INTENT(INOUT)  :: avcOUTNAME(*)  ! The address of the first record of an array of 1-byte CHARACTERS giving the simulation run name without extension.
@@ -237,13 +239,13 @@ SUBROUTINE CallBladedLegacyDLL ( u, p, dll_data, ErrStat, ErrMsg, ChannelNameUni
 
    IF ( ALLOCATED(dll_data%SCoutput) ) THEN
          ! Call the DLL (first associate the address from the procedure in the DLL with the subroutine):
-      CALL C_F_PROCPOINTER( p%DLL_Trgt%ProcAddr(1), DLL_SC_Subroutine) 
+      CALL C_F_PROCPOINTER( p%DLL_Trgt%ProcAddr(1), DLL_SC_Subroutine)
       CALL DLL_SC_Subroutine ( dll_data%avrSWAP, u%SuperController, dll_data%SCoutput, aviFAIL, accINFILE, avcOUTNAME, avcMSG ) 
             
    ELSE
          ! Call the DLL (first associate the address from the procedure in the DLL with the subroutine):
-      CALL C_F_PROCPOINTER( p%DLL_Trgt%ProcAddr(1), DLL_Legacy_Subroutine) 
-      CALL DLL_Legacy_Subroutine ( dll_data%avrSWAP, aviFAIL, accINFILE, avcOUTNAME, avcMSG ) 
+      CALL C_F_PROCPOINTER( p%DLL_Trgt%ProcAddr(1), DLL_Legacy_Subroutine)
+      CALL DLL_Legacy_Subroutine ( dll_data%avrSWAP, aviFAIL, accINFILE, avcOUTNAME, avcMSG )
    END IF
    
 #endif
@@ -268,7 +270,7 @@ SUBROUTINE CallBladedLegacyDLL ( u, p, dll_data, ErrStat, ErrMsg, ChannelNameUni
       ChannelNameUnit = TRANSFER(avcOUTNAME,ChannelNameUnit) !convert C character array to Fortran string
       CALL RemoveNullChar( ChannelNameUnit )
    END IF
-   
+
    RETURN
 END SUBROUTINE CallBladedLegacyDLL
 !==================================================================================================================================
@@ -321,17 +323,17 @@ SUBROUTINE BladedInterface_Init(u, p, m, y, InputFileData, InitInp, ErrStat, Err
    p%NacYaw_North          = InputFileData%NacYaw_North              ! Reference yaw angle of the nacelle when the upwind end points due North (rad)
 
    m%dll_data%DLL_NumTrq   = InputFileData%DLL_NumTrq                ! No. of points in torque-speed look-up table: 0 = none and use the optimal mode PARAMETERs instead, nonzero = ignore the optimal mode PARAMETERs by setting Record 16 to 0.0 (-)
-   
+
    m%dll_data%DLL_InFile = InputFileData%DLL_InFile
    m%dll_data%RootName = p%RootName
    p%avcOUTNAME_LEN    = max( LEN_TRIM(m%dll_data%RootName), MaxLoggingChannels*2*(1+ChanLen) ) + 1 ! = max( size of input, size of output ) + c_null_char
-   
+
    m%dll_data%DLL_DT   = InputFileData%DLL_DT ! Communication interval (sec)
    p%DLL_n             = NINT( m%dll_data%DLL_DT / p%DT )
    IF ( .NOT. EqualRealNos( p%DLL_n * p%DT, m%dll_data%DLL_DT ) ) THEN
       CALL CheckError( ErrID_Fatal, 'DLL_DT must be an integer multiple of DT.' )
    END IF
-   IF ( m%dll_data%DLL_DT < EPSILON( m%dll_data%DLL_DT ) ) THEN 
+   IF ( m%dll_data%DLL_DT < EPSILON( m%dll_data%DLL_DT ) ) THEN
       CALL CheckError( ErrID_Fatal, 'DLL_DT must be larger than zero.' )
    END IF
 
@@ -351,7 +353,7 @@ SUBROUTINE BladedInterface_Init(u, p, m, y, InputFileData, InitInp, ErrStat, Err
       CALL CheckError(ErrStat2,ErrMsg2)
 
    IF ( m%dll_data%DLL_NumTrq < 0_IntKi ) THEN
-      CALL CheckError( ErrID_Fatal, 'DLL_NumTrq must not be less than zero.') 
+      CALL CheckError( ErrID_Fatal, 'DLL_NumTrq must not be less than zero.')
    ELSEIF ( m%dll_data%DLL_NumTrq > 0 ) THEN
       m%dll_data%Gain_OM = 0.0 ! 0.0 indicates that torque-speed table look-up is selected
 
@@ -364,8 +366,8 @@ SUBROUTINE BladedInterface_Init(u, p, m, y, InputFileData, InitInp, ErrStat, Err
    
     ! Set status flag and initialize avrSWAP:
    m%dll_data%SimStatus = GH_DISCON_STATUS_INITIALISING
-   
-   CALL AllocAry( m%dll_data%avrSwap,   R+(2*m%dll_data%DLL_NumTrq)-1 + MaxLoggingChannels, 'avrSwap', ErrStat2, ErrMsg2 )
+
+   CALL AllocAry( m%dll_data%avrSwap,   R+(2*m%dll_data%DLL_NumTrq)-1 + N_EXTRA_RECORDS + MaxLoggingChannels, 'avrSwap', ErrStat2, ErrMsg2 )
       CALL CheckError(ErrStat2,ErrMsg2)
       IF ( ErrStat >= AbortErrLev ) RETURN
    m%dll_data%avrSWAP = 0.0
@@ -407,11 +409,11 @@ SUBROUTINE BladedInterface_Init(u, p, m, y, InputFileData, InitInp, ErrStat, Err
             p%UseLegacyInterface = .true. ! Bladed checks for the legacy version if it can't find the CONTROLL function in the DLL, so that's what we'll have to do, too
          end if
    end if
-   
+
    if (p%UseLegacyInterface) then
       p%DLL_Trgt%ProcName = "" ! initialize all procedures to empty so we try to load only one
       p%DLL_Trgt%ProcName(1) = InputFileData%DLL_ProcName
-      
+
       CALL LoadDynamicLib ( p%DLL_Trgt, ErrStat2, ErrMsg2 )
          CALL CheckError(ErrStat2,ErrMsg2)
          IF ( ErrStat >= AbortErrLev ) RETURN
@@ -425,15 +427,15 @@ SUBROUTINE BladedInterface_Init(u, p, m, y, InputFileData, InitInp, ErrStat, Err
    CALL GetBladedLoggingChannels(u,p,m, ErrStat2, ErrMsg2) ! this calls the DLL, but we don't have the correct inputs for a time step, so we'll close the DLL and start it again
       CALL CheckError(ErrStat2,ErrMsg2)
       IF ( ErrStat >= AbortErrLev ) RETURN
-      
+
       ! close and reload library here...
-      ! (if the DLL could be guaranteed to not do anything with the 
+      ! (if the DLL could be guaranteed to not do anything with the
       !  inputs on the initial step, we could avoid this this part)
-      
+
    CALL BladedInterface_End(u, p, m, ErrStat2, ErrMsg2)
       CALL CheckError(ErrStat2,ErrMsg2)
       IF ( ErrStat >= AbortErrLev ) RETURN
-      
+
    CALL LoadDynamicLib ( p%DLL_Trgt, ErrStat2, ErrMsg2 )
       CALL CheckError(ErrStat2,ErrMsg2)
       IF ( ErrStat >= AbortErrLev ) RETURN
@@ -478,16 +480,16 @@ CONTAINS
 END SUBROUTINE BladedInterface_Init
 !==================================================================================================================================
 SUBROUTINE GetBladedLoggingChannels(u,p,m, ErrStat, ErrMsg)
-   
+
    TYPE(SrvD_InputType),           INTENT(IN   )  :: u               !< An initial guess for the input; input mesh must be defined
    TYPE(SrvD_ParameterType),       INTENT(INOUT)  :: p               !< Parameters
    TYPE(SrvD_MiscVarType),         INTENT(INOUT)  :: m               !< Initial misc (optimization) variables
    INTEGER(IntKi),                 INTENT(  OUT)  :: ErrStat         !< Error status of the operation
    CHARACTER(*),                   INTENT(  OUT)  :: ErrMsg          !< Error message if ErrStat /= ErrID_None
 
-   
+
       ! local variables
-   
+
    INTEGER(IntKi)                                  :: StartIndx          ! starting index used to parse name/unit from Bladed DLL
    INTEGER(IntKi)                                  :: Indx               ! index used to parse name/unit from Bladed DLL
    INTEGER(IntKi)                                  :: i                  ! The error status code
@@ -497,20 +499,20 @@ SUBROUTINE GetBladedLoggingChannels(u,p,m, ErrStat, ErrMsg)
 
 
    CALL Fill_CONTROL_vars( 0.0_DbKi, u, p, LEN(ErrMsg), m%dll_data )
-   
+
    if (p%UseLegacyInterface) then
-      
+
       CALL CallBladedDLL(u, p, m%dll_data, ErrStat, ErrMsg, LoggingChannelStr)
          IF ( ErrStat >= AbortErrLev ) RETURN
-   
+
       p%NumOuts_DLL = NINT( m%dll_data%avrSWAP(65) ) ! number of channels returned for logging
-   
+
       ALLOCATE ( m%dll_data%LogChannels_OutParam(p%NumOuts_DLL) , STAT=ErrStat2 )
       IF ( ErrStat2 /= 0_IntKi )  THEN
          CALL SetErrStat( ErrID_Fatal,"Error allocating memory for the Bladed DLL logging channels name array.", ErrStat, ErrMsg, RoutineName )
          RETURN
       ENDIF
-      
+
       ALLOCATE( m%dll_data%LogChannels(p%NumOuts_DLL), STAT=ErrStat2 )
       IF ( ErrStat2 /= 0_IntKi )  THEN
          CALL SetErrStat( ErrID_Fatal,"Error allocating memory for the Bladed DLL logging channels array.", ErrStat, ErrMsg, RoutineName )
@@ -527,13 +529,13 @@ SUBROUTINE GetBladedLoggingChannels(u,p,m, ErrStat, ErrMsg)
 
       StartIndx = 1
       do i=1,p%NumOuts_DLL
-   
+
          ! parse the channel name
          indx = StartIndx + INDEX( LoggingChannelStr(StartIndx:), ':' ) - 1
          if (indx > len(LoggingChannelStr) .or. indx < 1) then
             call SetErrStat( ErrID_Severe,"Error getting logging channel name.", ErrStat, ErrMsg, RoutineName )
          endif
-      
+
          m%dll_data%LogChannels_OutParam(I)%Name  = LoggingChannelStr(StartIndx:indx-1)
          StartIndx = indx + 1
 
@@ -546,12 +548,12 @@ SUBROUTINE GetBladedLoggingChannels(u,p,m, ErrStat, ErrMsg)
          m%dll_data%LogChannels_OutParam(I)%Units = LoggingChannelStr(StartIndx:indx-1)
          StartIndx = indx + 1
       end do
-   
+
       !todo: make sure trim(m%dll_data%LogChannels_OutParam(i)%Name) does not contain spaces; replace with '_' if necessary
-   
+
    else
-   
-      
+
+
       ALLOCATE( m%dll_data%LogChannels(         MaxLoggingChannels), &
                 m%dll_data%LogChannels_OutParam(MaxLoggingChannels), STAT=ErrStat2 )
       IF ( ErrStat2 /= 0_IntKi )  THEN
@@ -561,12 +563,12 @@ SUBROUTINE GetBladedLoggingChannels(u,p,m, ErrStat, ErrMsg)
 
       CALL CallBladedDLL(u, p, m%dll_data, ErrStat, ErrMsg)
          IF ( ErrStat >= AbortErrLev ) RETURN
-   
+
       p%NumOuts_DLL = m%dll_data%NumLogChannels ! set this as a parameter in case the DLL changes the value during the simulation
-   
+
    end if
-   
-   
+
+
       ! convert Bladed-allowed unit specifiers to actual units
    do i=1,p%NumOuts_DLL
       select case (m%dll_data%LogChannels_OutParam(I)%Units)
@@ -637,7 +639,7 @@ SUBROUTINE GetBladedLoggingChannels(u,p,m, ErrStat, ErrMsg)
       case('VI')
          m%dll_data%LogChannels_OutParam(I)%Units = 'VA'
       end select
-         
+
    end do
 
 END SUBROUTINE GetBladedLoggingChannels
@@ -713,9 +715,9 @@ write(58,'()')
 CALL WrNumAryFileNR ( 59, m%dll_data%avrSWAP,'1x,ES15.6E2', ErrStat2, ErrMsg2 )
 write(59,'()')
 #endif
-   
+
       ! Get the output values from the avrSWAP array:
-   
+
    CALL CheckDLLReturnValues( p, m%dll_data, ErrStat2, ErrMsg2 )
       CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName)
       
@@ -736,7 +738,7 @@ SUBROUTINE Fill_avrSWAP( t, u, p, ErrMsgSz, dll_data )
 
       ! local variables:
    INTEGER(IntKi)                                 :: I           ! Loop counter
-  
+
    !> The following are values ServoDyn sends to the Bladed DLL.
    !! For variables returned from the DLL, see bladedinterface::retrieve_avrswap.
    dll_data%avrSWAP( 1) = dll_data%SimStatus
@@ -754,7 +756,7 @@ SUBROUTINE Fill_avrSWAP( t, u, p, ErrMsgSz, dll_data )
    dll_data%avrSWAP(12) = 0.0                               !> * Record 12: Current demanded pitch rate  (rad/s) [always zero for ServoDyn]
    dll_data%avrSWAP(13) = dll_data%GenPwr_Dem               !> * Record 13: Demanded power (W) [SrvD GenPwr_Dem parameter from input file]
    dll_data%avrSWAP(14) = u%RotPwr                          !> * Record 14: Measured shaft power (W) [SrvD input]
-   dll_data%avrSWAP(15) = dll_data%ElecPwr_prev             !> * Record 15: Measured electrical power output (W) [SrvD calculation from previous step; should technically be a state]   
+   dll_data%avrSWAP(15) = dll_data%ElecPwr_prev             !> * Record 15: Measured electrical power output (W) [SrvD calculation from previous step; should technically be a state]
    dll_data%avrSWAP(16) = dll_data%Gain_OM                  !> * Record 16: Optimal mode gain (Nm/(rad/s)^2) [if torque-speed table look-up not selected in input file, use SrvD Gain_OM parameter, otherwise use 0 (already overwritten in Init routine)]
    dll_data%avrSWAP(17) = dll_data%GenSpd_MinOM             !> * Record 17: Minimum generator speed (rad/s) [SrvD GenSpd_MinOM parameter]
    dll_data%avrSWAP(18) = dll_data%GenSpd_MaxOM             !> * Record 18: Optimal mode maximum speed (rad/s) [SrvD GenSpd_MaxOMp arameter]
@@ -773,7 +775,7 @@ SUBROUTINE Fill_avrSWAP( t, u, p, ErrMsgSz, dll_data )
    dll_data%avrSWAP(26) = dll_data%DLL_NumTrq               !> * Record 26: No. of points in torque-speed look-up table (-) [SrvD DLL_NumTrq parameter]
    dll_data%avrSWAP(27) = u%HorWindV                        !> * Record 27: Hub wind speed (m/s) [SrvD input]
    dll_data%avrSWAP(28) = dll_data%Ptch_Cntrl               !> * Record 28: Pitch control: 0 = collective, 1 = individual (-) [SrvD Ptch_Cntrl parameter]
-   dll_data%avrSWAP(29) = dll_data%Yaw_Cntrl                !> * Record 29: Yaw control: 0 = yaw rate control, 1 = yaw torque control (-) [must be 0 for ServoDyn] 
+   dll_data%avrSWAP(29) = dll_data%Yaw_Cntrl                !> * Record 29: Yaw control: 0 = yaw rate control, 1 = yaw torque control (-) [must be 0 for ServoDyn]
                          !^^^ bjj: maybe torque control can be used in ServoDyn? can we specifiy yaw torque control?
    dll_data%avrSWAP(30) = u%RootMyc(1)                      !> * Record 30: Blade 1 root out-of-plane bending moment (Nm) [SrvD input]
    dll_data%avrSWAP(31) = u%RootMyc(2)                      !> * Record 31: Blade 2 root out-of-plane bending moment (Nm) [SrvD input]
@@ -793,7 +795,7 @@ END IF
    dll_data%avrSWAP(49) = ErrMsgSz + 1                      !> * Record 49: Maximum number of characters in the "MESSAGE" argument (-) [size of ErrMsg argument plus 1 (we add one for the C NULL CHARACTER)]
    dll_data%avrSWAP(50) = LEN_TRIM(dll_data%DLL_InFile) +1  !> * Record 50: Number of characters in the "INFILE"  argument (-) [trimmed length of DLL_InFile parameter plus 1 (we add one for the C NULL CHARACTER)]
    dll_data%avrSWAP(51) = LEN_TRIM(dll_data%RootName)   +1  !> * Record 51: Number of characters in the "OUTNAME" argument (-) [trimmed length of RootName parameter plus 1 (we add one for the C NULL CHARACTER)]
-! Record 52 is reserved for future use                      ! DLL interface version number (-)
+   dll_data%avrSWAP(52) = 1024 * N_EXTRA_RECORDS            !> * Record 52: DLL interface version number. Take account the number of extra records for D-ICE controllers.
    dll_data%avrSWAP(53) = u%YawBrTAxp                       !> * Record 53: Tower top fore-aft     acceleration (m/s^2) [SrvD input]
    dll_data%avrSWAP(54) = u%YawBrTAyp                       !> * Record 54: Tower top side-to-side acceleration (m/s^2) [SrvD input]
 ! Records 55-59 are outputs [see Retrieve_avrSWAP()]
@@ -850,13 +852,39 @@ END IF
 ! Records 130-142 are outputs [see Retrieve_avrSWAP()]   
 ! Records L1 and onward are outputs [see Retrieve_avrSWAP()]
    
+   !> Extra records needed for D-ICE controllers
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 0) = u%PtfmPitch !> Extra record 0: Platform pitch angle
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 1) = u%PtfmRVyt !> Extra record 1: Platform pitch velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 2) = u%PtfmRAyt !> Extra record 2: Platform pitch acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 3) = u%PtfmRoll !> Extra record 3: Platform roll angle
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 4) = u%PtfmRVxt !> Extra record 4: Platform roll velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 5) = u%PtfmRAxt !> Extra record 5: Platform roll acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 6) = u%PtfmYaw !> Extra record 6: Platform yaw angle
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 7) = u%PtfmRVzt !> Extra record 7: Platform yaw velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 8) = u%PtfmRAzt !> Extra record 8: Platform yaw acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 9) = u%PtfmSway !> Extra record 9: Platform sway displacement
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 10) = u%PtfmSurge !> Extra record 10: Platform surge displacement
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 11) = u%PtfmHeave !> Extra record 11: Platform heave displacement
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 12) = u%PtfmTVyi !> Extra record 12: Platform sway velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 13) = u%PtfmTVxi !> Extra record 13: Platform surge velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 14) = u%PtfmTVzi !> Extra record 14: Platform heave velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 15) = u%PtfmTAyi !> Extra record 15: Platform sway acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 16) = u%PtfmTAxi !> Extra record 16: Platform surge acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 17) = u%PtfmTAzi !> Extra record 17: Platform heave acceleration
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 18) = u%YawBrRDyp !> Extra record 18: Tower-top pitch position
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 19) = u%YawBrRDxp !> Extra record 19: Tower-top roll position
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 20) = u%YawBrRDzp !> Extra record 20: Tower-top torsion position
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 21) = u%YawBrRVyp !> Extra record 21: Tower-top pitch velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 22) = u%YawBrRVxp !> Extra record 22: Tower-top roll velocity
+   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 23) = u%YawBrRVzp !> Extra record 23: Tower-top torsion velocity
+   
    
    
    RETURN
    
 END SUBROUTINE Fill_avrSWAP
 !==================================================================================================================================
-!> This routine fills the dll_data variables that are used in the non-legacy version of the Bladed DLL interface with inputs, 
+!> This routine fills the dll_data variables that are used in the non-legacy version of the Bladed DLL interface with inputs,
 !! as described in Appendices A and B of the Bladed User Manual of Bladed version 4.8.
 SUBROUTINE Fill_CONTROL_vars( t, u, p, ErrMsgSz, dll_data )
 
@@ -881,20 +909,20 @@ SUBROUTINE Fill_CONTROL_vars( t, u, p, ErrMsgSz, dll_data )
       dll_data%HSSBrTrqDemand = 0.0
       dll_data%ShaftBrakeStatusBinaryFlag = 0   ! no brakes deployed
       dll_data%HSSBrDeployed = .false.
-      
+
       dll_data%PrevBlPitch(1:p%NumBl) = p%BlPitchInit
       dll_data%BlPitchCom(1:p%NumBl)  = p%BlPitchInit
    end if
-   
+
    call Fill_avrSWAP( t, u, p, ErrMsgSz, dll_data ) ! we'll set the avrSWAP variable, for the legacy version of the DLL, too.
-   
+
    !> The following are values ServoDyn sends to the Bladed DLL.
    !! For variables returned from the DLL, see bladedinterface::retrieve_control_vars.
-   
+
    dll_data%ErrMsg = ''
    dll_data%ErrStat = ErrID_None
    dll_data%OverrideYawRateWithTorque = .false.
-   
+
    dll_data%CurrentTime             = t                                             ! Current time (sec)
    dll_data%BlPitchInput(1:p%NumBl) = u%BlPitch(1:p%NumBl)                          ! current blade pitch (input)
    dll_data%YawAngleFromNorth       = u%YawAngle - p%NacYaw_North                   ! Nacelle yaw angle from North (rad)
@@ -922,7 +950,7 @@ SUBROUTINE Fill_CONTROL_vars( t, u, p, ErrMsgSz, dll_data )
    dll_data%RootMxc                 = u%RootMxc                                     ! Blade root in-plane bending moment (Nm) [SrvD input]
 
 END SUBROUTINE Fill_CONTROL_vars
-!==================================================================================================================================  
+!==================================================================================================================================
 !> This routine retrieves the DLL return values from the avrSWAP array, as described in Appendices A and B of the Bladed User  
 !! Manual of Bladed version 3.81.
 SUBROUTINE Retrieve_avrSWAP( p, dll_data, ErrStat, ErrMsg )
@@ -937,7 +965,7 @@ SUBROUTINE Retrieve_avrSWAP( p, dll_data, ErrStat, ErrMsg )
       ! local variables:
    INTEGER(IntKi)                                 :: K           ! Loop counter
    CHARACTER(*), PARAMETER                        :: RoutineName = 'Retrieve_avrSWAP'
-   
+
       
       ! Initialize ErrStat and ErrMsg
    ErrStat = ErrID_None
@@ -953,12 +981,12 @@ SUBROUTINE Retrieve_avrSWAP( p, dll_data, ErrStat, ErrMsg )
 
 !> * Record 35: Generator contactor (-) [sent to DLL at the next call]
    dll_data%GenState  = NINT( dll_data%avrSWAP(35) )    ! Generator contactor (-)
-   
+
    
 !> * Record 36: Shaft brake status (-) [sent to DLL at the next call; anything other than 0 or 1 is an error]  
    !dll_data%HSSBrFrac = dll_data%avrSWAP(36)            ! Shaft brake status (-)
    dll_data%ShaftBrakeStatusBinaryFlag = NINT(dll_data%avrSWAP(36))
-   
+
 !! Records 38-40 are reserved
 !> * Record 41: demanded yaw actuator torque [this output is ignored since record 29 is set to 0 by ServoDyn indicating yaw rate control]
    dll_data%YawTorqueDemand = dll_data%avrSWAP(41)
@@ -983,7 +1011,7 @@ SUBROUTINE Retrieve_avrSWAP( p, dll_data, ErrStat, ErrMsg )
    
    
 !> * Record 55: Pitch override [anything other than 0 is an error in ServoDyn]
-   IF ( NINT( dll_data%avrSWAP(55) ) /=  0 )  THEN 
+   IF ( NINT( dll_data%avrSWAP(55) ) /=  0 )  THEN
          ! Pitch  override requested by DLL; abort program
       CALL SetErrStat( ErrID_Severe, 'Built-in pitch override unsupported. Set avrSWAP(55) to 0 in '// &
                        TRIM(p%DLL_Trgt%FileName)//'.', ErrStat, ErrMsg, RoutineName)
@@ -1020,7 +1048,7 @@ SUBROUTINE Retrieve_avrSWAP( p, dll_data, ErrStat, ErrMsg )
 !> * Record 98: Safety system number to activate; not used in ServoDyn
 
 !> * Records 102-104: Yaw control/stiffness/damping; ignored in ServoDyn
-   if (dll_data%avrSWAP(102)==4) then 
+   if (dll_data%avrSWAP(102)==4) then
       dll_data%OverrideYawRateWithTorque = .true.
    elseif (dll_data%avrSWAP(102)==0) then
       dll_data%OverrideYawRateWithTorque = .false.
@@ -1029,12 +1057,12 @@ SUBROUTINE Retrieve_avrSWAP( p, dll_data, ErrStat, ErrMsg )
       CALL SetErrStat( ErrID_Severe, 'Invalid yaw control flag. Set avrSWAP(102) to 0 or 4 in '// &
                        TRIM(p%DLL_Trgt%FileName)//'.', ErrStat, ErrMsg, RoutineName)
    end if
-   
+
 !> * Record 107: Brake torque demand (used only when avrSWAP(36) is 16)
    if (dll_data%ShaftBrakeStatusBinaryFlag == 16) then
       dll_data%HSSBrTrqDemand = dll_data%avrSWAP(107)
    end if
-   
+
 !> * Record 108: Yaw brake torque demand; ignored in ServoDyn
 
 !> * Records 120-129: User-defined variables 1-10; ignored in ServoDyn
@@ -1048,7 +1076,7 @@ SUBROUTINE Retrieve_avrSWAP( p, dll_data, ErrStat, ErrMsg )
 !> * Records 130-142: Reserved
 
 !> * L1: variables for logging output;
-      
+
    do k=1,p%NumOuts_DLL
       dll_data%LogChannels(k) = dll_data%avrSWAP( NINT(dll_data%avrSWAP(63))+k-1 )
    end do
@@ -1058,17 +1086,17 @@ END SUBROUTINE Retrieve_avrSWAP
 !==================================================================================================================================
 !> This routine checks that the values returned to FAST from the controller DLL (from either version of the interface) are valid
 SUBROUTINE CheckDLLReturnValues( p, dll_data, ErrStat, ErrMsg )
- 
+
    TYPE(SrvD_ParameterType),       INTENT(IN   )  :: p           !< Parameters
    TYPE(BladedDLLType),            INTENT(INOUT)  :: dll_data    !< data for the Bladed DLL
    INTEGER(IntKi),                 INTENT(  OUT)  :: ErrStat     !< Error status of the operation
    CHARACTER(*),                   INTENT(  OUT)  :: ErrMsg      !< Error message if ErrStat /= ErrID_None
 
    CHARACTER(*), PARAMETER                        :: RoutineName = 'CheckDLLReturnValues'
-   
+
       ! Initialize ErrStat and ErrMsg
    ErrStat = ErrID_None
-   ErrMsg  = ''   
+   ErrMsg  = ''
 
    if (p%UseLegacyInterface) then
       CALL Retrieve_avrSWAP( p, dll_data, ErrStat, ErrMsg )
@@ -1076,7 +1104,7 @@ SUBROUTINE CheckDLLReturnValues( p, dll_data, ErrStat, ErrMsg )
    end if
 
 
-   IF ( ( dll_data%GenState /= 0_IntKi ) .AND. ( dll_data%GenState /= 1_IntKi ) )  THEN 
+   IF ( ( dll_data%GenState /= 0_IntKi ) .AND. ( dll_data%GenState /= 1_IntKi ) )  THEN
          ! Generator contactor indicates something other than off or main; abort program
       if (p%UseLegacyInterface) then
          CALL SetErrStat( ErrID_Fatal, 'Only off and main generators supported. Set avrSWAP(35) to 0 or 1 in '//TRIM(p%DLL_Trgt%FileName)//'.', ErrStat, ErrMsg, RoutineName)
@@ -1085,7 +1113,7 @@ SUBROUTINE CheckDLLReturnValues( p, dll_data, ErrStat, ErrMsg )
                          TRIM(p%DLL_Trgt%FileName)//'.', ErrStat, ErrMsg, RoutineName)
       end if
    END IF
-   
+
 
    SELECT CASE (dll_data%ShaftBrakeStatusBinaryFlag)
    CASE (0)
@@ -1099,7 +1127,7 @@ SUBROUTINE CheckDLLReturnValues( p, dll_data, ErrStat, ErrMsg )
          dll_data%HSSBrTrqDemand = 0.0_ReKi
       else
            ! apply a linear ramp up to the maximum value
-         IF ( dll_data%CurrentTime < dll_data%TimeHSSBrFullyDeployed )  THEN 
+         IF ( dll_data%CurrentTime < dll_data%TimeHSSBrFullyDeployed )  THEN
             dll_data%HSSBrTrqDemand = ( dll_data%CurrentTime - dll_data%TimeHSSBrDeployed )/p%HSSBrDT * p%HSSBrTqF
          ELSE ! Full braking torque
             dll_data%HSSBrTrqDemand = p%HSSBrTqF
@@ -1110,7 +1138,7 @@ SUBROUTINE CheckDLLReturnValues( p, dll_data, ErrStat, ErrMsg )
       ! do we need to check that dll_data%HSSBrTrqDemand is set properly????
    CASE DEFAULT
       dll_data%HSSBrDeployed = .false.
-      
+
          ! Fatal issue: shaft brake status specified incorrectly
       if (p%UseLegacyInterface) then
          CALL SetErrStat( ErrID_Fatal, 'Shaft brake status set improperly. Set avrSWAP(36) to 0, 1, or 16 in '// &
@@ -1120,7 +1148,7 @@ SUBROUTINE CheckDLLReturnValues( p, dll_data, ErrStat, ErrMsg )
                          TRIM(p%DLL_Trgt%FileName)//'.', ErrStat, ErrMsg, RoutineName)
       end if
    END SELECT
-   
+
 END SUBROUTINE CheckDLLReturnValues
 !==================================================================================================================================
 END MODULE BladedInterface

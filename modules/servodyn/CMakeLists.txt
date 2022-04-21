@@ -15,8 +15,8 @@
 #
 
 if (GENERATE_TYPES)
-  generate_f90_types(src/TMD_Registry.txt ${CMAKE_CURRENT_LIST_DIR}/src/TMD_Types.f90)
   generate_f90_types(src/ServoDyn_Registry.txt ${CMAKE_CURRENT_LIST_DIR}/src/ServoDyn_Types.f90)
+  generate_f90_types(src/TMD_Registry.txt ${CMAKE_CURRENT_LIST_DIR}/src/TMD_Types.f90)
 endif()
 
 set(SD_SOURCES

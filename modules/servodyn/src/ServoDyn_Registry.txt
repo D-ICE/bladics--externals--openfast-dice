@@ -376,6 +376,32 @@ typedef	^	InputType	TMD_InputType	NTMD	-	-	-	"TMD module inputs - nacelle"	-
 typedef	^	InputType	TMD_InputType	TTMD	-	-	-	"TMD module inputs - tower"	-
 typedef	^	InputType	SiKi	SuperController	{:}	-	-	"A swap array: used to pass input data to the DLL controller from the supercontroller"	-
 
+# ..... Extra Inputs needed for D-ICE controllers .................................................................................
+typedef	^	InputType	ReKi	PtfmPitch	-	-	-	"Platform pitch tilt angular (rotational) displacement"	radians
+typedef	^	InputType	ReKi	PtfmRVyt	-	-	-	"Platform pitch tilt angular (rotational) velocity"	rad/s
+typedef	^	InputType	ReKi	PtfmRAyt	-	-	-	"Platform pitch tilt angular (rotational) acceleration"	rad/s^2
+typedef	^	InputType	ReKi	PtfmRoll	-	-	-	"Platform roll tilt angular (rotational) displacement"	radians
+typedef	^	InputType	ReKi	PtfmRVxt	-	-	-	"Platform roll tilt angular (rotational) velocity"	rad/s
+typedef	^	InputType	ReKi	PtfmRAxt	-	-	-	"Platform roll tilt angular (rotational) acceleration"	rad/s^2
+typedef	^	InputType	ReKi	PtfmYaw	-	-	-	"Platform yaw tilt angular (rotational) displacement"	radians
+typedef	^	InputType	ReKi	PtfmRVzt	-	-	-	"Platform yaw tilt angular (rotational) velocity"	rad/s
+typedef	^	InputType	ReKi	PtfmRAzt	-	-	-	"Platform yaw tilt angular (rotational) acceleration"	rad/s^2
+typedef	^	InputType	ReKi	PtfmSway	-	-	-	"Platform horizontal sway (translational) displacement"	m
+typedef	^	InputType	ReKi	PtfmSurge	-	-	-	"Platform horizontal surge (translational) displacement"	m
+typedef	^	InputType	ReKi	PtfmHeave	-	-	-	"Platform vertical heave (translational) displacement"	m
+typedef	^	InputType	ReKi	PtfmTVyi	-	-	-	"Platform horizontal sway (translational) velocity" m/s
+typedef	^	InputType	ReKi	PtfmTVxi	-	-	-	"Platform horizontal surge (translational) velocity" m/s
+typedef	^	InputType	ReKi	PtfmTVzi	-	-	-	"Platform vertical heave (translational) velocity" m/s
+typedef	^	InputType	ReKi	PtfmTAyi	-	-	-	"Platform horizontal sway (translational) acceleration" m/s^2
+typedef	^	InputType	ReKi	PtfmTAxi	-	-	-	"Platform horizontal surge (translational) acceleration" m/s^2
+typedef	^	InputType	ReKi	PtfmTAzi	-	-	-	"Platform vertical heave (translational) acceleration" m/s^2
+typedef	^	InputType	ReKi	YawBrRDyp	-	-	-	"Tower-top / yaw bearing angular (rotational) pitch position (absolute)" rad
+typedef	^	InputType	ReKi	YawBrRDxp	-	-	-	"Tower-top / yaw bearing angular (rotational) roll position (absolute)" rad
+typedef	^	InputType	ReKi	YawBrRDzp	-	-	-	"Tower-top / yaw bearing angular (rotational) torsion position (absolute)" rad
+typedef	^	InputType	ReKi	YawBrRVyp	-	-	-	"Tower-top / yaw bearing angular (rotational) pitch velocity (absolute)" rad/s
+typedef	^	InputType	ReKi	YawBrRVxp	-	-	-	"Tower-top / yaw bearing angular (rotational) roll velocity (absolute)" rad/s
+typedef	^	InputType	ReKi	YawBrRVzp	-	-	-	"Tower-top / yaw bearing angular (rotational) torsion velocity (absolute)" rad/s
+
 # ..... Outputs ...................................................................................................................
 # Define outputs that are contained on the mesh here:
 #typedef	^	OutputType	MeshType	MeshedOutput	-	-	-	"Meshed output data"	-
