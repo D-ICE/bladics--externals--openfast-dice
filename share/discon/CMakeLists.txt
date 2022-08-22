@@ -72,7 +72,7 @@ endif (NOT CMAKE_BUILD_TYPE)
 # set the build flags
 if (${CMAKE_Fortran_COMPILER_ID} STREQUAL "GNU")
   set_gfortran()
-elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
+elseif(${CMAKE_Fortran_COMPILER_ID} MATCHES "^Intel")
   set_ifort()
 endif()
 set(CMAKE_SHARE_LINKER_FLAGS "-shared")
@@ -90,11 +90,11 @@ add_library(DISCON SHARED ${SOURCE_PATH})
 set_target_properties(DISCON PROPERTIES PREFIX "" SUFFIX ".dll")
 
 # if this project is built standlone
-if (${CMAKE_CURRENT_LIST_DIR} STREQUAL ${OpenFAST_SOURCE_DIR})
-  set(INSTALL_DEST "${OpenFAST_SOURCE_DIR}/..")
+if (${CMAKE_CURRENT_LIST_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
+  set(INSTALL_DEST "${CMAKE_SOURCE_DIR}/..")
 # otherwise
 else()
-  set(INSTALL_DEST "${OpenFAST_BINARY_DIR}/reg_tests/glue-codes/openfast/5MW_Baseline/ServoData")
+  set(INSTALL_DEST "${CMAKE_BINARY_DIR}/reg_tests/glue-codes/openfast/5MW_Baseline/ServoData")
 endif()
 
 install(TARGETS DISCON DESTINATION ${INSTALL_DEST})

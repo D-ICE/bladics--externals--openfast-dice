@@ -51,14 +51,14 @@ PROJECT_BRIEF          = "Wind turbine multiphysics simulator"
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
-PROJECT_LOGO           = @OpenFAST_BINARY_DIR@/docs/_static/openfastlogo.jpg
+PROJECT_LOGO           = @CMAKE_BINARY_DIR@/docs/_static/openfastlogo.jpg
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
 # into which the generated documentation will be written. If a relative path is
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = @OpenFAST_BINARY_DIR@/docs/doxygen
+OUTPUT_DIRECTORY       = @CMAKE_BINARY_DIR@/docs/doxygen
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -829,8 +829,8 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = @OpenFAST_SOURCE_DIR@/glue-codes/ \
-                         @OpenFAST_SOURCE_DIR@/modules/ \
+INPUT                  = @CMAKE_SOURCE_DIR@/glue-codes/ \
+                         @CMAKE_SOURCE_DIR@/modules/ \
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -900,12 +900,12 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =  @OpenFAST_SOURCE_DIR@/.git/* \
-                          @OpenFAST_SOURCE_DIR@/build/* \
-                          @OpenFAST_SOURCE_DIR@/cmake/* \
-                          @OpenFAST_SOURCE_DIR@/docs/* \
-                          @OpenFAST_SOURCE_DIR@/modules/orcaflex-interface/src/OrcaFlexInterface.f90 \
-                          @OpenFAST_SOURCE_DIR@/modules/servodyn/src/BladedInterface.f90
+EXCLUDE_PATTERNS       =  @CMAKE_SOURCE_DIR@/.git/* \
+                          @CMAKE_SOURCE_DIR@/build/* \
+                          @CMAKE_SOURCE_DIR@/cmake/* \
+                          @CMAKE_SOURCE_DIR@/docs/* \
+                          @CMAKE_SOURCE_DIR@/modules/orcaflex-interface/src/OrcaFlexInterface.f90 \
+                          @CMAKE_SOURCE_DIR@/modules/servodyn/src/BladedInterface.f90
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -2180,7 +2180,7 @@ TAGFILES               =
 # tag file that is based on the input files it reads. See section "Linking to
 # external documentation" for more information about the usage of tag files.
 
-GENERATE_TAGFILE       = @OpenFAST_BINARY_DIR@/docs/openfast.tag
+GENERATE_TAGFILE       = @CMAKE_BINARY_DIR@/docs/openfast.tag
 
 # If the ALLEXTERNALS tag is set to YES, all external class will be listed in
 # the class index. If set to NO, only the inherited external classes will be

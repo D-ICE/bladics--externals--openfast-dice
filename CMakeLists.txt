@@ -17,10 +17,10 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(OpenFAST CXX C Fortran)
 
-include(${OpenFAST_SOURCE_DIR}/cmake/OpenfastCmakeUtils.cmake)
-include(${OpenFAST_SOURCE_DIR}/cmake/OpenfastFortranOptions.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/OpenfastCmakeUtils.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/OpenfastFortranOptions.cmake)
 
-set(CMAKE_MODULE_PATH "${OpenFAST_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # CMake Configuration variables
 if (NOT CMAKE_BUILD_TYPE)
@@ -35,12 +35,21 @@ option(USE_DLL_INTERFACE "Enable runtime loading of dynamic libraries" on)
 option(FPE_TRAP_ENABLED "Enable FPE trap in compiler options" off)
 option(ORCA_DLL_LOAD "Enable OrcaFlex Library Load" on)
 option(BUILD_OPENFAST_CPP_API "Enable building OpenFAST - C++ API" off)
-option(OPENMP                 "Enable OpenMP support"              off)
+option(BUILD_FASTFARM "Enable building FAST.Farm" off)
+option(OPENMP "Enable OpenMP support" off)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  # Configure the default install path to openfast/install
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "OpenFAST install directory" FORCE)
+endif()
+if(APPLE)
+  option(CMAKE_MACOSX_RPATH "Use RPATH runtime linking" on)
+endif()
 
 # Precompiler/preprocessor flag configuration
 # Do this before configuring modules so that the flags are included
 option(BUILD_TESTING "Build the testing tree." OFF)
 if(BUILD_TESTING)
+  option(CODECOVERAGE "Enable infrastructure for measuring code coverage." OFF)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -DUNIT_TEST")
 endif()
 option(BUILD_OPENFAST_SIMULINK_API "Enable building OpenFAST for use with Simulink" off)
@@ -51,6 +60,29 @@ endif()
 # Setup Fortran Compiler options based on architecture/compiler
 set_fast_fortran()
 
+# Configure measuring code coverage in tests
+if(CODECOVERAGE)
+  # Only supports GNU
+  if(NOT CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+    message(WARNING "CODECOVERAGE is only support with GNU Compilers. The current Fortran compiler is ${CMAKE_Fortran_COMPILER_ID}.")
+  endif()
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES GNU)
+    message(WARNING "CODECOVERAGE is only support with GNU Compilers. The current C++ compiler is ${CMAKE_CXX_COMPILER_ID}.")
+  endif()
+  if(NOT CMAKE_C_COMPILER_ID MATCHES GNU)
+    message(WARNING "CODECOVERAGE is only support with GNU Compilers. The current C compiler is ${CMAKE_C_COMPILER_ID}.")
+  endif()
+
+  string(TOUPPER ${CMAKE_BUILD_TYPE} _build_type)
+  if (NOT ${_build_type} STREQUAL "DEBUG")
+    message(WARNING "CODECOVERAGE reporting may be inaccurate with compiler optimizations on. Please run with CMAKE_BUILD_TYPE=DEBUG.")
+  endif()
+
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} --coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+endif()
+
 if (USE_DLL_INTERFACE)
   add_definitions(-DUSE_DLL_INTERFACE)
 endif (USE_DLL_INTERFACE)
@@ -60,7 +92,7 @@ if (FPE_TRAP_ENABLED)
 endif (FPE_TRAP_ENABLED)
 
 # Setup dependencies
-if (CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
+if (${CMAKE_Fortran_COMPILER_ID} MATCHES "^Intel")
   find_package(MKL)
 endif()
 if (MKL_FOUND)
@@ -72,6 +104,9 @@ else()
   find_package(BLAS REQUIRED)
   find_package(LAPACK REQUIRED)
 endif()
+
+# Set the RPATH after configuring the install prefix
+include(${CMAKE_SOURCE_DIR}/cmake/set_rpath.cmake)
 
 ########################################################################
 # Build rules for OpenFAST Registry
@@ -105,17 +140,19 @@ set(OPENFAST_MODULES
   icedyn
   icefloe
   map
+  wakedynamics
+  awae
 )
 
 set(OPENFAST_REGISTRY_INCLUDES "" CACHE INTERNAL "Registry includes paths")
 set_registry_includes("modules" ${OPENFAST_MODULES})
 # Fix non-standard path addition to OPENFAST_REGISTRY_INCLUDES in icefloe module
 set(OPENFAST_REGISTRY_INCLUDES
-  ${OPENFAST_REGISTRY_INCLUDES} -I ${OpenFAST_SOURCE_DIR}/modules/icefloe/src/interfaces/FAST/
+  ${OPENFAST_REGISTRY_INCLUDES} -I ${CMAKE_SOURCE_DIR}/modules/icefloe/src/interfaces/FAST/
   CACHE INTERNAL "Registry includes paths")
 
 foreach(IDIR IN ITEMS ${OPENFAST_MODULES})
-  add_subdirectory("${OpenFAST_SOURCE_DIR}/modules/${IDIR}")
+  add_subdirectory("${CMAKE_SOURCE_DIR}/modules/${IDIR}")
 endforeach(IDIR IN ITEMS ${OPENFAST_MODULES})
 
 add_subdirectory(glue-codes)
@@ -125,9 +162,9 @@ install(CODE
   "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/openfast/\")")
 
 # Install the library dependency information
-#install(EXPORT OpenFASTLibraries
-#  DESTINATION lib/cmake/OpenFAST
-#  FILE OpenFASTLibraries.cmake)
+install(EXPORT OpenFASTLibraries
+  DESTINATION lib/cmake/OpenFAST
+  FILE OpenFASTLibraries.cmake)
 
 # Create OpenFAST config so that other codes can find OpenFAST
 include(CMakePackageConfigHelpers)
@@ -150,11 +187,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenFASTConfig.cmake
   DESTINATION lib/cmake/OpenFAST)
 
 ########################################################################
-# Configure the default install path to openfast/install
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${OpenFAST_SOURCE_DIR}/install" CACHE PATH
-    "OpenFAST install directory" FORCE)
-endif()
 
 # Option configuration
 if(BUILD_TESTING)
