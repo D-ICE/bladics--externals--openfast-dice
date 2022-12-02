@@ -527,6 +527,31 @@ IMPLICIT NONE
     TYPE(MeshType) , DIMENSION(:), ALLOCATABLE  :: NStCMotionMesh      !< StC module nacelle      input motion mesh [-]
     TYPE(MeshType) , DIMENSION(:), ALLOCATABLE  :: TStCMotionMesh      !< StC module tower        input motion mesh [-]
     TYPE(MeshType) , DIMENSION(:), ALLOCATABLE  :: SStCMotionMesh      !< StC module substructure input motion mesh [-]
+    REAL(ReKi)  :: PtfmPitch      !< Platform pitch tilt angular (rotational) displacement [radians]
+    REAL(ReKi)  :: PtfmRVyt      !< Platform pitch tilt angular (rotational) velocity [rad/s]
+    REAL(ReKi)  :: PtfmRAyt      !< Platform pitch tilt angular (rotational) acceleration [rad/s^2]
+    REAL(ReKi)  :: PtfmRoll      !< Platform roll tilt angular (rotational) displacement [radians]
+    REAL(ReKi)  :: PtfmRVxt      !< Platform roll tilt angular (rotational) velocity [rad/s]
+    REAL(ReKi)  :: PtfmRAxt      !< Platform roll tilt angular (rotational) acceleration [rad/s^2]
+    REAL(ReKi)  :: PtfmYaw      !< Platform yaw tilt angular (rotational) displacement [radians]
+    REAL(ReKi)  :: PtfmRVzt      !< Platform yaw tilt angular (rotational) velocity [rad/s]
+    REAL(ReKi)  :: PtfmRAzt      !< Platform yaw tilt angular (rotational) acceleration [rad/s^2]
+    REAL(ReKi)  :: PtfmSway      !< Platform horizontal sway (translational) displacement [m]
+    REAL(ReKi)  :: PtfmSurge      !< Platform horizontal surge (translational) displacement [m]
+    REAL(ReKi)  :: PtfmHeave      !< Platform vertical heave (translational) displacement [m]
+    REAL(ReKi)  :: PtfmTVyi      !< Platform horizontal sway (translational) velocity [m/s]
+    REAL(ReKi)  :: PtfmTVxi      !< Platform horizontal surge (translational) velocity [m/s]
+    REAL(ReKi)  :: PtfmTVzi      !< Platform vertical heave (translational) velocity [m/s]
+    REAL(ReKi)  :: PtfmTAyi      !< Platform horizontal sway (translational) acceleration [m/s^2]
+    REAL(ReKi)  :: PtfmTAxi      !< Platform horizontal surge (translational) acceleration [m/s^2]
+    REAL(ReKi)  :: PtfmTAzi      !< Platform vertical heave (translational) acceleration [m/s^2]
+    REAL(ReKi)  :: YawBrRDyp      !< Tower-top / yaw bearing angular (rotational) pitch position (absolute) [rad]
+    REAL(ReKi)  :: YawBrRDxp      !< Tower-top / yaw bearing angular (rotational) roll position (absolute) [rad]
+    REAL(ReKi)  :: YawBrRDzp      !< Tower-top / yaw bearing angular (rotational) torsion position (absolute) [rad]
+    REAL(ReKi)  :: YawBrRVyp      !< Tower-top / yaw bearing angular (rotational) pitch velocity (absolute) [rad/s]
+    REAL(ReKi)  :: YawBrRVxp      !< Tower-top / yaw bearing angular (rotational) roll velocity (absolute) [rad/s]
+    REAL(ReKi)  :: YawBrRVzp      !< Tower-top / yaw bearing angular (rotational) torsion velocity (absolute) [rad/s]
+
   END TYPE SrvD_InputType
 ! =======================
 ! =========  SrvD_OutputType  =======
@@ -14778,6 +14803,33 @@ ENDIF
     DstInputData%LSShftFxa = SrcInputData%LSShftFxa
     DstInputData%LSShftFys = SrcInputData%LSShftFys
     DstInputData%LSShftFzs = SrcInputData%LSShftFzs
+
+   ! D-ICE added types
+    DstInputData%PtfmPitch = SrcInputData%PtfmPitch
+    DstInputData%PtfmRVyt = SrcInputData%PtfmRVyt
+    DstInputData%PtfmRAyt = SrcInputData%PtfmRAyt
+    DstInputData%PtfmRoll = SrcInputData%PtfmRoll
+    DstInputData%PtfmRVxt = SrcInputData%PtfmRVxt
+    DstInputData%PtfmRAxt = SrcInputData%PtfmRAxt
+    DstInputData%PtfmYaw = SrcInputData%PtfmYaw
+    DstInputData%PtfmRVzt = SrcInputData%PtfmRVzt
+    DstInputData%PtfmRAzt = SrcInputData%PtfmRAzt
+    DstInputData%PtfmSway = SrcInputData%PtfmSway
+    DstInputData%PtfmSurge = SrcInputData%PtfmSurge
+    DstInputData%PtfmHeave = SrcInputData%PtfmHeave
+    DstInputData%PtfmTVyi = SrcInputData%PtfmTVyi
+    DstInputData%PtfmTVxi = SrcInputData%PtfmTVxi
+    DstInputData%PtfmTVzi = SrcInputData%PtfmTVzi
+    DstInputData%PtfmTAyi = SrcInputData%PtfmTAyi
+    DstInputData%PtfmTAxi = SrcInputData%PtfmTAxi
+    DstInputData%PtfmTAzi = SrcInputData%PtfmTAzi
+    DstInputData%YawBrRDyp = SrcInputData%YawBrRDyp
+    DstInputData%YawBrRDxp = SrcInputData%YawBrRDxp
+    DstInputData%YawBrRDzp = SrcInputData%YawBrRDzp
+    DstInputData%YawBrRVyp = SrcInputData%YawBrRVyp
+    DstInputData%YawBrRVxp = SrcInputData%YawBrRVxp
+    DstInputData%YawBrRVzp = SrcInputData%YawBrRVzp
+
 IF (ALLOCATED(SrcInputData%fromSC)) THEN
   i1_l = LBOUND(SrcInputData%fromSC,1)
   i1_u = UBOUND(SrcInputData%fromSC,1)
