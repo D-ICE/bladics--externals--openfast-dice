@@ -23,6 +23,7 @@ PROGRAM SrvD_Driver
    USE NWTC_Library
    USE ServoDyn
    USE ServoDyn_Types
+   USE VersionInfo
 
    IMPLICIT NONE
 
@@ -62,7 +63,7 @@ PROGRAM SrvD_Driver
    CHARACTER(20)                                      :: FlagArg              !< Flag argument from command line
 
    TYPE(ProgDesc), PARAMETER :: version = ProgDesc( 'ServoDyn_driver', '', '' )
-
+   
    !...............................................................................................................................
    ! Routines called in initialization
    !...............................................................................................................................
@@ -197,9 +198,9 @@ PROGRAM SrvD_Driver
       CALL WrScr( ErrMsg )
    END IF
    write(Un,'(600(ES15.5,1x))') Time, y%BlPitchCom, y%WriteOutput
-
-
-
+   
+         
+   
    DO n = 0,nMax
 
          ! Modify u for inputs at n (likely from the outputs of another module or a set of test conditions) here:
@@ -211,7 +212,7 @@ PROGRAM SrvD_Driver
       u(1)%BlPitch = y%BlPitchCom   
          
       !u(1)%HSS_Spd = (2000.0_ReKi)/nMax  * RPM2RPS * n
-
+      
       CALL SrvD_UpdateStates( Time, n, u, InputTime, p, x, xd, z, OtherState, misc, ErrStat, ErrMsg )
       IF ( ErrStat /= ErrID_None ) THEN          ! Check if there was an error and do something about it if necessary
          CALL WrScr( ErrMsg )

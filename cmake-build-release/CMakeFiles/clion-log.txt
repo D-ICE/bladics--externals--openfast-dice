@@ -1,0 +1,46 @@
+/home/natalia/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/193.6911.21/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/home/natalia/anaconda3/envs/openfast/bin/x86_64-conda-linux-gnu-cc -DCMAKE_CXX_COMPILER=/home/natalia/anaconda3/envs/openfast/bin/x86_64-conda-linux-gnu-c++ -DCMAKE_Fortran_COMPILER=/home/natalia/anaconda3/bin/x86_64-conda-linux-gnu-gfortran -DCMAKE_PREFIX_PATH=/home/natalia/anaconda3/lib -G "CodeBlocks - Unix Makefiles" /data1/bladics/externals/bladics--externals--openfast-dice_v3.2.0
+-- The CXX compiler identification is GNU 11.2.0
+-- The C compiler identification is GNU 11.2.0
+-- The Fortran compiler identification is GNU 7.5.0
+-- Check for working CXX compiler: /home/natalia/anaconda3/envs/openfast/bin/x86_64-conda-linux-gnu-c++
+-- Check for working CXX compiler: /home/natalia/anaconda3/envs/openfast/bin/x86_64-conda-linux-gnu-c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Check for working C compiler: /home/natalia/anaconda3/envs/openfast/bin/x86_64-conda-linux-gnu-cc
+-- Check for working C compiler: /home/natalia/anaconda3/envs/openfast/bin/x86_64-conda-linux-gnu-cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working Fortran compiler: /home/natalia/anaconda3/bin/x86_64-conda-linux-gnu-gfortran
+-- Check for working Fortran compiler: /home/natalia/anaconda3/bin/x86_64-conda-linux-gnu-gfortran  -- works
+-- Detecting Fortran compiler ABI info
+-- Detecting Fortran compiler ABI info - done
+-- Checking whether /home/natalia/anaconda3/bin/x86_64-conda-linux-gnu-gfortran supports Fortran 90
+-- Checking whether /home/natalia/anaconda3/bin/x86_64-conda-linux-gnu-gfortran supports Fortran 90 -- yes
+-- Performing Test HAS_FORTRAN2008
+-- Performing Test HAS_FORTRAN2008 - Success
+-- Enabling Fortran 2008 features
+-- Looking for Fortran sgemm
+-- Looking for Fortran sgemm - not found
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE  
+-- Looking for Fortran sgemm
+-- Looking for Fortran sgemm - found
+-- Found BLAS: /home/natalia/anaconda3/lib/libmkl_gf_lp64.so;/home/natalia/anaconda3/lib/libmkl_gnu_thread.so;/home/natalia/anaconda3/lib/libmkl_core.so;/home/natalia/anaconda3/lib/libgomp.so;-lpthread;-lm;-ldl  
+-- Looking for Fortran cheev
+-- Looking for Fortran cheev - found
+-- A library with LAPACK API found.
+-- Setting system file as: src/SysGnuLinux.f90
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /data1/bladics/externals/bladics--externals--openfast-dice_v3.2.0/cmake-build-release

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libscdataexlib.a  CMakeFiles/scdataexlib.dir/src/SC_DataEx.f90.o
+/usr/bin/ranlib libscdataexlib.a

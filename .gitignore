@@ -49,3 +49,7 @@ vs-build/
 *.aux
 *.nlo
 *.log
+
+# D-ice internal folder
+dice/
+.idea/

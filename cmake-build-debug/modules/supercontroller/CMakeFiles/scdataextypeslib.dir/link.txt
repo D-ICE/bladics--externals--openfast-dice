@@ -1,0 +1,2 @@
+/usr/bin/ar qc libscdataextypeslib.a  CMakeFiles/scdataextypeslib.dir/src/SCDataEx_Types.f90.o
+/usr/bin/ranlib libscdataextypeslib.a

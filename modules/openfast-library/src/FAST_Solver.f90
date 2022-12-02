@@ -44,8 +44,6 @@ MODULE FAST_Solver
    USE OpenFOAM
    Use ExtPtfm_MCKF
 
-   USE ElastoDyn_IO   ! We need this for extra inputs (for D-ICE controller)
-   
 
    IMPLICIT NONE
 
@@ -1020,6 +1018,10 @@ SUBROUTINE SrvD_InputSolve( p_FAST, m_FAST, u_SrvD, y_ED, y_IfW, y_OpFM, y_BD, y
    u_SrvD%NcIMURAzs = y_ED%NcIMURAzs
 
    u_SrvD%RotPwr    = y_ED%RotPwr
+
+   u_SrvD%LSShftFxa = y_ED%LSShftFxa
+   u_SrvD%LSShftFys = y_ED%LSShftFys
+   u_SrvD%LSShftFzs = y_ED%LSShftFzs
 
    !   ! ServoDyn inputs from AeroDyn
    !IF ( p_FAST%CompAero == Module_AD ) THEN
@@ -5020,8 +5022,8 @@ SUBROUTINE CalcOutputs_And_SolveForInputs( n_t_global, this_time, this_state, ca
    INTEGER(IntKi)                          :: ErrStat2
    CHARACTER(ErrMsgLen)                    :: ErrMSg2
    CHARACTER(*), PARAMETER                 :: RoutineName = 'CalcOutputs_And_SolveForInputs'
-
-
+   
+   
 #ifdef OUTPUT_MASS_MATRIX   
    INTEGER                                 :: UnMM
 #endif
@@ -5103,7 +5105,7 @@ SUBROUTINE CalcOutputs_And_SolveForInputs( n_t_global, this_time, this_state, ca
    END IF
    
       !> Solve option 1 (rigorous solve on loads/accelerations)
-   CALL SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD, SD, ExtPtfm, MAPp, FEAM, MD, Orca, IceF, IceD, SrvD, AD14, AD, Ifw, MeshMapData, ErrStat2, ErrMsg2, WriteThisStep)
+   CALL SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD, SD, ExtPtfm, MAPp, FEAM, MD, Orca, IceF, IceD, SrvD, MeshMapData, ErrStat2, ErrMsg2, WriteThisStep)
       CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )  
 
       
@@ -5147,10 +5149,6 @@ SUBROUTINE CalcOutputs_And_SolveForInputs( n_t_global, this_time, this_state, ca
    IF ( p_FAST%CompServo == Module_SrvD  ) THEN         
       CALL SrvD_InputSolve( p_FAST, m_FAST, SrvD%Input(1), ED%y, IfW%y, OpFM%y, BD%y, SD%y, MeshmapData, ErrStat2, ErrMsg2 )
       CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
-
-      CALL DICE_SrvD_ExtraInputSolve( SrvD%Input(1), ED, BD, SrvD, AD14, AD, IfW ) ! Extra inputs needed for D-ICE controllers
-
-
    END IF         
              
    IF (p_FAST%CompElast == Module_BD .and. .NOT. BD_Solve_Option1) THEN            
@@ -5170,7 +5168,7 @@ END SUBROUTINE CalcOutputs_And_SolveForInputs
 !----------------------------------------------------------------------------------------------------------------------------------
 !> This routine implements the "option 1" solve for all inputs with direct links to HD, SD, ExtPtfm, MAP, OrcaFlex interface, and the ED 
 !! platform reference point. Also in solve option 1 are the BD-ED blade root coupling.
-SUBROUTINE SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD, SD, ExtPtfm, MAPp, FEAM, MD, Orca, IceF, IceD, SrvD, AD14, AD, IfW, MeshMapData, ErrStat, ErrMsg, WriteThisStep )
+SUBROUTINE SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD, SD, ExtPtfm, MAPp, FEAM, MD, Orca, IceF, IceD, SrvD, MeshMapData, ErrStat, ErrMsg, WriteThisStep )
 !...............................................................................................................................
    REAL(DbKi)              , intent(in   ) :: this_time           !< The current simulation time (actual or time of prediction)
    INTEGER(IntKi)          , intent(in   ) :: this_state          !< Index into the state array (current or predicted states)
@@ -5181,9 +5179,7 @@ SUBROUTINE SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD,
    TYPE(ElastoDyn_Data),     INTENT(INOUT) :: ED                  !< ElastoDyn data
    TYPE(BeamDyn_Data),       INTENT(INOUT) :: BD                  !< BeamDyn data
    TYPE(ServoDyn_Data),      INTENT(INOUT) :: SrvD                ! ServoDyn data
-   TYPE(AeroDyn_Data),       INTENT(INOUT) :: AD                  ! AeroDyn data
-   TYPE(AeroDyn14_Data),     INTENT(INOUT) :: AD14                ! AeroDyn14 data
-   TYPE(InflowWind_Data),    INTENT(INOUT) :: IfW                 !< InflowWind data
+   !TYPE(AeroDyn14_Data),     INTENT(INOUT) :: AD14                ! AeroDyn14 data
    TYPE(HydroDyn_Data),      INTENT(INOUT) :: HD                  !< HydroDyn data
    TYPE(SubDyn_Data),        INTENT(INOUT) :: SD                  !< SubDyn data
    TYPE(ExtPtfm_Data),       INTENT(INOUT) :: ExtPtfm             !< ExtPtfm data
@@ -5262,8 +5258,6 @@ SUBROUTINE SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD,
       CALL SrvD_CalcOutput( this_time, SrvD%Input(1), SrvD%p, SrvD%x(this_state), SrvD%xd(this_state), SrvD%z(this_state), &
                             SrvD%OtherSt(this_state), SrvD%y, SrvD%m, ErrStat2, ErrMsg2 )
          CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
-
-      CALL DICE_SrvD_ExtraInputSolve( SrvD%Input(1), ED, BD, SrvD, AD14, AD, IfW )
    END IF
 
  
@@ -5388,53 +5382,6 @@ SUBROUTINE SolveOption1(this_time, this_state, calcJacobian, p_FAST, ED, BD, HD,
 #endif         
                   
 END SUBROUTINE SolveOption1
-
-   !----------------------------------------------------------------------------------------------------------------------------------
-   !> This routine sets the inputs required for ServoDyn
-SUBROUTINE DICE_SrvD_ExtraInputSolve( u_SrvD, ED, BD, SrvD, AD14, AD, IfW )
-   !..................................................................................................................................
-
-   TYPE(SrvD_InputType),             INTENT(INOUT)  :: u_SrvD       !< ServoDyn Inputs at t
-
-   TYPE(ElastoDyn_Data),     INTENT(INOUT) :: ED                  !< ElastoDyn data
-   TYPE(BeamDyn_Data),       INTENT(INOUT) :: BD                  !< BeamDyn data
-   TYPE(ServoDyn_Data),      INTENT(INOUT) :: SrvD                !< ServoDyn data
-   TYPE(AeroDyn14_Data),     INTENT(INOUT) :: AD14                !< AeroDyn14 data
-   TYPE(AeroDyn_Data),       INTENT(INOUT) :: AD                  !< AeroDyn data
-   TYPE(InflowWind_Data),    INTENT(INOUT) :: IfW                 !< InflowWind data
-
-   INTEGER(IntKi)                                   :: k            ! blade loop counter
-
-   CHARACTER(*), PARAMETER                          :: RoutineName = 'DICE_SrvD_ExtraInputSolve'
-
-
-   u_SrvD%PtfmPitch = ED%m%AllOuts( PtfmRDyi)*D2R
-   u_SrvD%PtfmRVyt = ED%m%AllOuts( PtfmRVyt)*D2R
-   u_SrvD%PtfmRAyt = ED%m%AllOuts( PtfmRAyt)*D2R
-   u_SrvD%PtfmRoll = ED%m%AllOuts( PtfmRDxi)*D2R
-   u_SrvD%PtfmRVxt = ED%m%AllOuts( PtfmRVxt)*D2R
-   u_SrvD%PtfmRAxt = ED%m%AllOuts( PtfmRAxt)*D2R
-   u_SrvD%PtfmYaw = ED%m%AllOuts( PtfmRDzi)*D2R
-   u_SrvD%PtfmRVzt = ED%m%AllOuts( PtfmRVzt)*D2R
-   u_SrvD%PtfmRAzt = ED%m%AllOuts( PtfmRAzt)*D2R
-   u_SrvD%PtfmSway = ED%m%AllOuts( PtfmTDyi)
-   u_SrvD%PtfmSurge = ED%m%AllOuts( PtfmTDxi)
-   u_SrvD%PtfmHeave = ED%m%AllOuts( PtfmTDzi)
-   u_SrvD%PtfmTVyi = ED%m%AllOuts( PtfmTVyi)
-   u_SrvD%PtfmTVxi = ED%m%AllOuts( PtfmTVxi)
-   u_SrvD%PtfmTVzi = ED%m%AllOuts( PtfmTVzi)
-   u_SrvD%PtfmTAyi = ED%m%AllOuts( PtfmTAyi)
-   u_SrvD%PtfmTAxi = ED%m%AllOuts( PtfmTAxi)
-   u_SrvD%PtfmTAzi = ED%m%AllOuts( PtfmTAzi)
-   u_SrvD%YawBrRDyp = u_SrvD%PtfmPitch + ED%m%AllOuts( YawBrRDyt)*D2R
-   u_SrvD%YawBrRDxp = u_SrvD%PtfmRoll + ED%m%AllOuts( YawBrRDxt)*D2R
-   u_SrvD%YawBrRDzp = u_SrvD%PtfmYaw + ED%m%AllOuts( YawBrRDzt)*D2R
-   u_SrvD%YawBrRVyp = ED%m%AllOuts( YawBrRVyp)*D2R
-   u_SrvD%YawBrRVxp = ED%m%AllOuts( YawBrRVxp)*D2R
-   u_SrvD%YawBrRVzp = ED%m%AllOuts( YawBrRVzp)*D2R
-
-END SUBROUTINE DICE_SrvD_ExtraInputSolve
-
 !----------------------------------------------------------------------------------------------------------------------------------
 !> This routine implements the first part of the "option 2" solve for inputs that apply to BeamDyn and AeroDyn 
 SUBROUTINE SolveOption2a_Inp2BD(this_time, this_state, p_FAST, m_FAST, ED, BD, AD14, AD, SrvD, IfW, OpFM, MeshMapData, ErrStat, ErrMsg, WriteThisStep)
@@ -5585,7 +5532,7 @@ SUBROUTINE SolveOption2c_Inp2AD_SrvD(this_time, this_state, p_FAST, m_FAST, ED, 
    CHARACTER(ErrMsgLen)                    :: ErrMSg2
    
    CHARACTER(*), PARAMETER                 :: RoutineName = 'SolveOption2c_Inp2AD_SrvD'
-
+   
    !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    !> ++ Option 2: Solve for inputs based only on the current outputs. 
    !!    This is much faster than option 1 when the coupled modules do not have direct feedthrough.
@@ -5628,9 +5575,6 @@ SUBROUTINE SolveOption2c_Inp2AD_SrvD(this_time, this_state, p_FAST, m_FAST, ED, 
       CALL SrvD_InputSolve( p_FAST, m_FAST, SrvD%Input(1), ED%y, IfW%y, OpFM%y, BD%y, SD%y, MeshMapData, ErrStat2, ErrMsg2 )
 
          CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
-
-      CALL DICE_SrvD_ExtraInputSolve( SrvD%Input(1), ED, BD, SrvD, AD14, AD, IfW ) ! Extra inputs needed for D-ICE controllers
-
    END IF
    
 END SUBROUTINE SolveOption2c_Inp2AD_SrvD
@@ -5775,10 +5719,10 @@ SUBROUTINE FAST_AdvanceStates( t_initial, n_t_global, p_FAST, m_FAST, ED, BD, Sr
    INTEGER(IntKi)                          :: n_t_module          ! simulation time step, loop counter for individual modules
    INTEGER(IntKi)                          :: ErrStat2
    CHARACTER(ErrMsgLen)                    :: ErrMsg2
-   CHARACTER(*), PARAMETER                 :: RoutineName = 'FAST_AdvanceStates'
-
-
-
+   CHARACTER(*), PARAMETER                 :: RoutineName = 'FAST_AdvanceStates'       
+   
+   
+   
    ErrStat = ErrID_None
    ErrMsg  = ""
 
@@ -5928,7 +5872,7 @@ SUBROUTINE FAST_AdvanceStates( t_initial, n_t_global, p_FAST, m_FAST, ED, BD, Sr
       DO j_ss = 1, p_FAST%n_substeps( Module_SrvD )
          n_t_module = n_t_global*p_FAST%n_substeps( Module_SrvD ) + j_ss - 1
          t_module   = n_t_module*p_FAST%dt_module( Module_SrvD ) + t_initial
-
+               
          CALL SrvD_UpdateStates( t_module, n_t_module, SrvD%Input, SrvD%InputTimes, SrvD%p, SrvD%x(STATE_PRED), SrvD%xd(STATE_PRED), &
                  SrvD%z(STATE_PRED), SrvD%OtherSt(STATE_PRED), SrvD%m, ErrStat2, ErrMsg2 )
             CALL SetErrStat( Errstat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
