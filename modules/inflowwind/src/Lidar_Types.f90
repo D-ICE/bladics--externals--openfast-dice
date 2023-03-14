@@ -39,7 +39,7 @@ IMPLICIT NONE
     INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_PulsedLidar = 2 
 ! =========  Lidar_InitInputType  =======
   TYPE, PUBLIC :: Lidar_InitInputType
-    INTEGER(IntKi)  :: SensorType = SensorType_None      !< SensorType_* parameter [-]
+    INTEGER(IntKi)  :: SensorType = SensorType_SinglePoint      !< SensorType_* parameter [-] !DICE
     REAL(DbKi)  :: Tmax      !< the length of the simulation [s]
     REAL(ReKi) , DIMENSION(1:3)  :: RotorApexOffsetPos      !< position of the lidar unit relative to the rotor apex of rotation [m]
     REAL(ReKi) , DIMENSION(1:3)  :: HubPosition      !< initial position of the hub (lidar mounted on hub) [0,0,HubHeight] [m]

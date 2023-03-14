@@ -166,7 +166,7 @@ SUBROUTINE Lidar_Init( InitInp, u, p, x, xd, z, OtherState, y, m, Interval, Init
       !............................................................................................
 
    u%lidar%LidPosition = InitInp%lidar%HubPosition
-   u%lidar%MsrPosition = InitInp%lidar%HubPosition + (/ 50.0, 0.0, 0.0 /) !bjj: todo FIXME  with initial guess of lidar focus.
+   u%lidar%MsrPosition = InitInp%lidar%HubPosition + (/ -100.0, 0.0, 0.0 /) !bjj: todo FIXME  with initial guess of lidar focus. !DICE
    u%lidar%PulseLidEl  = 0.0_ReKi
    u%lidar%PulseLidAz  = 0.0_ReKi
    

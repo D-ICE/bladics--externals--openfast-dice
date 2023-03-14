@@ -547,6 +547,7 @@ typedef	^	InputType	ReKi	YawBrRDzp	-	-	-	"Tower-top / yaw bearing angular (rotat
 typedef	^	InputType	ReKi	YawBrRVyp	-	-	-	"Tower-top / yaw bearing angular (rotational) pitch velocity (absolute)" rad/s
 typedef	^	InputType	ReKi	YawBrRVxp	-	-	-	"Tower-top / yaw bearing angular (rotational) roll velocity (absolute)" rad/s
 typedef	^	InputType	ReKi	YawBrRVzp	-	-	-	"Tower-top / yaw bearing angular (rotational) torsion velocity (absolute)" rad/s
+typedef	^	InputType	ReKi	LidarWindV	-	-	-	"Lidar measured wind speed 100m in front of the hub" m/s
 
 # ..... Outputs ...................................................................................................................
 # Define outputs that are contained on the mesh here:

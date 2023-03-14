@@ -595,7 +595,7 @@ SUBROUTINE FAST_InitializeAll( t_initial, p_FAST, y_FAST, m_FAST, ED, BD, SrvD, 
          Init%InData_IfW%lidar%RotorApexOffsetPos  = 0.0
          Init%InData_IfW%lidar%NumPulseGate        = 0
       ELSE
-         Init%InData_IfW%lidar%SensorType          = SensorType_None
+         Init%InData_IfW%lidar%SensorType          = SensorType_SinglePoint  !DICE
          Init%InData_IfW%Use4Dext                  = .false.
       END IF
 
@@ -1398,7 +1398,7 @@ SUBROUTINE FAST_InitializeAll( t_initial, p_FAST, y_FAST, m_FAST, ED, BD, SrvD, 
       endif
    end if
 
-   m_FAST%ExternInput%LidarFocus = 1.0_ReKi  ! make this non-zero (until we add the initial position in the InflowWind input file)
+   m_FAST%ExternInput%LidarFocus = -100.0_ReKi  ! make this non-zero (until we add the initial position in the InflowWind input file)  !DICE
 
 
    !...............................................................................................................................

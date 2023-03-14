@@ -5436,6 +5436,7 @@ SUBROUTINE DICE_SrvD_ExtraInputSolve( u_SrvD, ED, BD, SrvD, AD14, AD, IfW )
    u_SrvD%YawBrRVyp = ED%m%AllOuts( YawBrRVyp)*D2R
    u_SrvD%YawBrRVxp = ED%m%AllOuts( YawBrRVxp)*D2R
    u_SrvD%YawBrRVzp = ED%m%AllOuts( YawBrRVzp)*D2R
+   u_SrvD%LidarWindV = Ifw%y%lidar%LidSpeed(1)  !DICE
 
 END SUBROUTINE DICE_SrvD_ExtraInputSolve
 
