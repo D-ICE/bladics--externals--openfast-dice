@@ -105,7 +105,7 @@ MODULE BladedInterface
 
    INTEGER(IntKi), PARAMETER    :: R = R_v43          !< start of the generator speed look-up table
 
-   INTEGER(IntKi), PARAMETER    :: N_EXTRA_RECORDS = 25    !< Number of extra records after the generator speed look-up table
+   INTEGER(IntKi), PARAMETER    :: N_EXTRA_RECORDS = 27    !< Number of extra records after the generator speed look-up table
 
 #ifdef STATIC_DLL_LOAD
    INTEGER(IntKi), PARAMETER    :: MaxLoggingChannels = 0
@@ -1097,7 +1097,9 @@ END IF
   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 21) = u%YawBrRVyp !> Extra record 21: Tower-top pitch velocity
   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 22) = u%YawBrRVxp !> Extra record 22: Tower-top roll velocity
   dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 23) = u%YawBrRVzp !> Extra record 23: Tower-top torsion velocity
-  dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 24) = u%LidarWindV !> Extra record 23: Tower-top torsion velocity
+  dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 24) = u%LidarWindVx !> Extra record 23: Tower-top torsion velocity
+  dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 25) = u%LidarWindVy !> Extra record 23: Tower-top torsion velocity
+  dll_data%avrSWAP(R + 2*dll_data%DLL_NumTrq + 26) = u%LidarWindVz !> Extra record 23: Tower-top torsion velocity
 
 
    RETURN

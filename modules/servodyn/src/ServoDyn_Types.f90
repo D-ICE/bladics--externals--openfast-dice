@@ -551,7 +551,9 @@ IMPLICIT NONE
     REAL(ReKi)  :: YawBrRVyp      !< Tower-top / yaw bearing angular (rotational) pitch velocity (absolute) [rad/s]
     REAL(ReKi)  :: YawBrRVxp      !< Tower-top / yaw bearing angular (rotational) roll velocity (absolute) [rad/s]
     REAL(ReKi)  :: YawBrRVzp      !< Tower-top / yaw bearing angular (rotational) torsion velocity (absolute) [rad/s]
-    REAL(ReKi)  :: LidarWindV      !< Lidar measured wind speed 100m in front of the hub [m/s]
+    REAL(ReKi)  :: LidarWindVx      !< Lidar measured wind speed 100m in front of the hub along x [m/s]
+    REAL(ReKi)  :: LidarWindVy      !< Lidar measured wind speed 100m in front of the hub along y [m/s]
+    REAL(ReKi)  :: LidarWindVz      !< Lidar measured wind speed 100m in front of the hub along z [m/s]
 
   END TYPE SrvD_InputType
 ! =======================
@@ -14830,7 +14832,9 @@ ENDIF
     DstInputData%YawBrRVyp = SrcInputData%YawBrRVyp
     DstInputData%YawBrRVxp = SrcInputData%YawBrRVxp
     DstInputData%YawBrRVzp = SrcInputData%YawBrRVzp
-    DstInputData%LidarWindV = SrcInputData%LidarWindV  ! DICE
+    DstInputData%LidarWindVx = SrcInputData%LidarWindVx  ! DICE
+    DstInputData%LidarWindVy = SrcInputData%LidarWindVy  ! DICE
+    DstInputData%LidarWindVz = SrcInputData%LidarWindVz  ! DICE
 
 IF (ALLOCATED(SrcInputData%fromSC)) THEN
   i1_l = LBOUND(SrcInputData%fromSC,1)
