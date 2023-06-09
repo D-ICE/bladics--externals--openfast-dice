@@ -189,7 +189,7 @@ IMPLICIT NONE
     REAL(ReKi) , DIMENSION(:,:), ALLOCATABLE  :: PositionXYZ      !< Array holding the input positions at a given timestep [meters]
     TYPE(Lidar_InputType)  :: lidar      !< Lidar data [-]
     REAL(ReKi) , DIMENSION(1:3)  :: HubPosition      !< orientation of the Hub (direction cosine matrix) [-]
-    REAL(ReKi) , DIMENSION(1:3,1:3)  :: NacelleOrientation      !< orientation of the Hub (direction cosine matrix) [-]
+    REAL(ReKi) , DIMENSION(1:3,1:3)  :: NacelleOrientation      !< orientation of the Nacelle (direction cosine matrix) [-]
   END TYPE InflowWind_InputType
 ! =======================
 ! =========  InflowWind_OutputType  =======

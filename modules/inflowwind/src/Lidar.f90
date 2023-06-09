@@ -23,7 +23,6 @@ MODULE Lidar
    USE InflowWind_Subs
    USE InflowWind_Types
    USE Lidar_Types
-   USE NWTC_Library
 
    IMPLICIT NONE
 
@@ -112,8 +111,8 @@ SUBROUTINE Lidar_Init( InitInp, u, p, x, xd, z, OtherState, y, m, Interval, Init
       p%lidar%NumPulseGate = 0
    ELSEIF (p%lidar%SensorType == SensorType_SinglePoint) THEN
       p%lidar%NumPulseGate = 1
-   ELSEIF (p%lidar%SensorType == SensorType_Dice_MultiPoint) THEN
-      p%lidar%NumPulseGate = 1
+   ELSEIF (p%lidar%SensorType == SensorType_Dice_MultiPoint) THEN ! D-ICE
+      p%lidar%NumPulseGate = 1 ! D-ICE
    ELSE
       
          ! variables for both pulsed and continuous-wave lidars
@@ -171,8 +170,6 @@ SUBROUTINE Lidar_Init( InitInp, u, p, x, xd, z, OtherState, y, m, Interval, Init
    u%lidar%LidPosition = InitInp%lidar%HubPosition
 
    u%lidar%MsrPosition_1 = (/ -50.0, 40.0, 0.0 /) !DICE
-   !u%lidar%MsrPosition_1 = (/ -50.0, 0.0, 0.0 /) !DICE
-   !u%lidar%MsrPosition_1 = (/ 0.0, 40.0, 0.0 /) !DICE
    u%lidar%MsrPosition_2 = (/ -50.0, 0.0, 40.0 /) !DICE
    u%lidar%MsrPosition_3 = (/ -50.0, -40.0, 0.0 /) !DICE
    u%lidar%MsrPosition_4 = (/ -50.0, 0.0, -40.0 /) !DICE
@@ -307,16 +304,16 @@ SUBROUTINE Lidar_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMs
    TYPE(InflowWind_OutputType)                           :: Output               ! velocity at Input%Position
    
    REAL(ReKi)                                            :: OutputVelocity(3)
-   REAL(ReKi)                                            :: Lidar_PosMean_Velocity(3)
-   REAL(ReKi)                                            :: Lidar_Pos1_Velocity(3)
-   REAL(ReKi)                                            :: Lidar_Pos2_Velocity(3)
-   REAL(ReKi)                                            :: Lidar_Pos3_Velocity(3)
-   REAL(ReKi)                                            :: Lidar_Pos4_Velocity(3)
-   REAL(ReKi)                                            :: Lidar_Pos5_Velocity(3)
-   REAL(ReKi)                                            :: Lidar_Pos6_Velocity(3)
-   REAL(ReKi)                                            :: Lidar_Pos7_Velocity(3)
-   REAL(ReKi)                                            :: Lidar_Pos8_Velocity(3)
-   REAL(ReKi)                                            :: LidPosition(3)      ! Lidar Position
+   REAL(ReKi)                                            :: Lidar_PosMean_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: Lidar_Pos1_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: Lidar_Pos2_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: Lidar_Pos3_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: Lidar_Pos4_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: Lidar_Pos5_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: Lidar_Pos6_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: Lidar_Pos7_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: Lidar_Pos8_Velocity(3) ! D-ICE
+   REAL(ReKi)                                            :: LidPosition(3) ! D-ICE Lidar Position
 
       
    INTEGER(IntKi)                                        :: IRangeGt
@@ -331,11 +328,7 @@ SUBROUTINE Lidar_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMs
    ErrStat = ErrID_None
    ErrMsg  = ""
 
-   ! D-ice
-   LidPosition = u%lidar%LidPosition + (/ u%lidar%HubDisplacementX, u%lidar%HubDisplacementY, u%lidar%HubDisplacementZ /)
-   CALL WrScr ( '  u%lidar%LidPosition:  '//TRIM(Num2LStr(u%lidar%LidPosition(1)))//'  '//TRIM(Num2LStr(u%lidar%LidPosition(2)))//'  '//TRIM(Num2LStr(u%lidar%LidPosition(3))))
-   CALL WrScr ( '  HubDisplacement:  '//TRIM(Num2LStr(u%lidar%HubDisplacementX))//'  '//TRIM(Num2LStr(u%lidar%HubDisplacementY))//'  '//TRIM(Num2LStr(u%lidar%HubDisplacementZ)))
-   CALL WrScr ( '  LidPosition:  '//TRIM(Num2LStr(LidPosition(1)))//'  '//TRIM(Num2LStr(LidPosition(2)))//'  '//TRIM(Num2LStr(LidPosition(3))))
+   LidPosition = u%lidar%LidPosition + (/ u%lidar%HubDisplacementX, u%lidar%HubDisplacementY, u%lidar%HubDisplacementZ /) ! D-ICE
 
 
    IF (p%lidar%SensorType == SensorType_None) RETURN
@@ -361,14 +354,14 @@ SUBROUTINE Lidar_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMs
    IF (p%lidar%SensorType == SensorType_SinglePoint) THEN
       
       !get lidar speed at the focal point to see if it is out of bounds   
-      Input%PositionXYZ(:,1) = u%lidar%MsrPosition_1
+      Input%PositionXYZ(:,1) = u%lidar%MsrPosition_1 ! D-ICE
       CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )      
          CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )                
       
       y%lidar%LidSpeed = Output%VelocityUVW(:,1)
       y%lidar%WtTrunc  = 1.0_ReKi
 
-   ELSEIF (p%lidar%SensorType == SensorType_Dice_MultiPoint) THEN
+   ELSEIF (p%lidar%SensorType == SensorType_Dice_MultiPoint) THEN ! D-ICE
 
          !get lidar speed at the focal point to see if it is out of bounds
 
@@ -429,7 +422,7 @@ SUBROUTINE Lidar_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMs
       !calculate the focal distance of the lidar as well as the modified focal distance so that the peak of the weighting func
       !is at the intended focal distance
    
-      Distance   = u%lidar%MsrPosition_1 - u%lidar%LidPosition
+      Distance   = u%lidar%MsrPosition_1 - u%lidar%LidPosition ! D-ICE
       FocDist    = SQRT( DOT_PRODUCT( Distance, Distance ) ) !TwoNorm
       
       IF(EqualRealNos(FocDist,0.0_ReKi)) THEN ! Avoid division-by-zero
