@@ -23,6 +23,7 @@ MODULE Lidar
    USE InflowWind_Subs
    USE InflowWind_Types
    USE Lidar_Types
+   USE NWTC_Library
 
    IMPLICIT NONE
 
@@ -111,6 +112,8 @@ SUBROUTINE Lidar_Init( InitInp, u, p, x, xd, z, OtherState, y, m, Interval, Init
       p%lidar%NumPulseGate = 0
    ELSEIF (p%lidar%SensorType == SensorType_SinglePoint) THEN
       p%lidar%NumPulseGate = 1
+   ELSEIF (p%lidar%SensorType == SensorType_Dice_MultiPoint) THEN
+      p%lidar%NumPulseGate = 1
    ELSE
       
          ! variables for both pulsed and continuous-wave lidars
@@ -166,7 +169,17 @@ SUBROUTINE Lidar_Init( InitInp, u, p, x, xd, z, OtherState, y, m, Interval, Init
       !............................................................................................
 
    u%lidar%LidPosition = InitInp%lidar%HubPosition
-   u%lidar%MsrPosition = InitInp%lidar%HubPosition + (/ -100.0, 0.0, 0.0 /) !bjj: todo FIXME  with initial guess of lidar focus. !DICE
+
+   u%lidar%MsrPosition_1 = (/ -50.0, 40.0, 0.0 /) !DICE
+   !u%lidar%MsrPosition_1 = (/ -50.0, 0.0, 0.0 /) !DICE
+   !u%lidar%MsrPosition_1 = (/ 0.0, 40.0, 0.0 /) !DICE
+   u%lidar%MsrPosition_2 = (/ -50.0, 0.0, 40.0 /) !DICE
+   u%lidar%MsrPosition_3 = (/ -50.0, -40.0, 0.0 /) !DICE
+   u%lidar%MsrPosition_4 = (/ -50.0, 0.0, -40.0 /) !DICE
+   u%lidar%MsrPosition_5 = (/ -50.0, 28.8, 28.8 /) !DICE
+   u%lidar%MsrPosition_6 = (/ -50.0, 28.8, -28.8 /) !DICE
+   u%lidar%MsrPosition_7 = (/ -50.0, -28.8, 28.8 /) !DICE
+   u%lidar%MsrPosition_8 = (/ -50.0, -28.8, -28.8 /) !DICE
    u%lidar%PulseLidEl  = 0.0_ReKi
    u%lidar%PulseLidAz  = 0.0_ReKi
    
@@ -294,7 +307,17 @@ SUBROUTINE Lidar_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMs
    TYPE(InflowWind_OutputType)                           :: Output               ! velocity at Input%Position
    
    REAL(ReKi)                                            :: OutputVelocity(3)
-   
+   REAL(ReKi)                                            :: Lidar_PosMean_Velocity(3)
+   REAL(ReKi)                                            :: Lidar_Pos1_Velocity(3)
+   REAL(ReKi)                                            :: Lidar_Pos2_Velocity(3)
+   REAL(ReKi)                                            :: Lidar_Pos3_Velocity(3)
+   REAL(ReKi)                                            :: Lidar_Pos4_Velocity(3)
+   REAL(ReKi)                                            :: Lidar_Pos5_Velocity(3)
+   REAL(ReKi)                                            :: Lidar_Pos6_Velocity(3)
+   REAL(ReKi)                                            :: Lidar_Pos7_Velocity(3)
+   REAL(ReKi)                                            :: Lidar_Pos8_Velocity(3)
+   REAL(ReKi)                                            :: LidPosition(3)      ! Lidar Position
+
       
    INTEGER(IntKi)                                        :: IRangeGt
    INTEGER(IntKi)                                        :: ErrStat2
@@ -308,9 +331,16 @@ SUBROUTINE Lidar_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMs
    ErrStat = ErrID_None
    ErrMsg  = ""
 
+   ! D-ice
+   LidPosition = u%lidar%LidPosition + (/ u%lidar%HubDisplacementX, u%lidar%HubDisplacementY, u%lidar%HubDisplacementZ /)
+   CALL WrScr ( '  u%lidar%LidPosition:  '//TRIM(Num2LStr(u%lidar%LidPosition(1)))//'  '//TRIM(Num2LStr(u%lidar%LidPosition(2)))//'  '//TRIM(Num2LStr(u%lidar%LidPosition(3))))
+   CALL WrScr ( '  HubDisplacement:  '//TRIM(Num2LStr(u%lidar%HubDisplacementX))//'  '//TRIM(Num2LStr(u%lidar%HubDisplacementY))//'  '//TRIM(Num2LStr(u%lidar%HubDisplacementZ)))
+   CALL WrScr ( '  LidPosition:  '//TRIM(Num2LStr(LidPosition(1)))//'  '//TRIM(Num2LStr(LidPosition(2)))//'  '//TRIM(Num2LStr(LidPosition(3))))
+
+
    IF (p%lidar%SensorType == SensorType_None) RETURN
-   
-      
+
+
       ! allocate arrays to compute outputs
    CALL AllocAry(Input%PositionXYZ, 3,1, 'Input%PositionXYZ',ErrStat2, ErrMsg2)
       CALL SetErrStat(ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
@@ -331,18 +361,75 @@ SUBROUTINE Lidar_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMs
    IF (p%lidar%SensorType == SensorType_SinglePoint) THEN
       
       !get lidar speed at the focal point to see if it is out of bounds   
-      Input%PositionXYZ(:,1) = u%lidar%MsrPosition      
+      Input%PositionXYZ(:,1) = u%lidar%MsrPosition_1
       CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )      
          CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )                
       
       y%lidar%LidSpeed = Output%VelocityUVW(:,1)
       y%lidar%WtTrunc  = 1.0_ReKi
-         
+
+   ELSEIF (p%lidar%SensorType == SensorType_Dice_MultiPoint) THEN
+
+         !get lidar speed at the focal point to see if it is out of bounds
+
+         Input%PositionXYZ(:,1) = matmul(transpose(u%NacelleOrientation),u%lidar%MsrPosition_1) + LidPosition
+         CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )
+            CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         Lidar_Pos1_Velocity = Output%VelocityUVW(:,1)
+
+         Input%PositionXYZ(:,1) = matmul(transpose(u%NacelleOrientation),u%lidar%MsrPosition_2) + LidPosition
+         CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )
+           CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         Lidar_Pos2_Velocity = Output%VelocityUVW(:,1)
+
+         Input%PositionXYZ(:,1) = matmul(transpose(u%NacelleOrientation),u%lidar%MsrPosition_3) + LidPosition
+         CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )
+           CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         Lidar_Pos3_Velocity = Output%VelocityUVW(:,1)
+
+         Input%PositionXYZ(:,1) = matmul(transpose(u%NacelleOrientation),u%lidar%MsrPosition_4) + LidPosition
+         CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )
+           CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         Lidar_Pos4_Velocity = Output%VelocityUVW(:,1)
+
+         Input%PositionXYZ(:,1) = matmul(transpose(u%NacelleOrientation),u%lidar%MsrPosition_5) + LidPosition
+         CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )
+           CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         Lidar_Pos5_Velocity = Output%VelocityUVW(:,1)
+
+         Input%PositionXYZ(:,1) = matmul(transpose(u%NacelleOrientation),u%lidar%MsrPosition_6) + LidPosition
+         CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )
+           CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         Lidar_Pos6_Velocity = Output%VelocityUVW(:,1)
+
+         Input%PositionXYZ(:,1) = matmul(transpose(u%NacelleOrientation),u%lidar%MsrPosition_7) + LidPosition
+         CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )
+           CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         Lidar_Pos7_Velocity = Output%VelocityUVW(:,1)
+
+         Input%PositionXYZ(:,1) = matmul(transpose(u%NacelleOrientation),u%lidar%MsrPosition_8) + LidPosition
+         CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )
+           CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
+         Lidar_Pos8_Velocity = Output%VelocityUVW(:,1)
+
+         Lidar_PosMean_Velocity(1) = &
+                 (Lidar_Pos1_Velocity(1) + Lidar_Pos2_Velocity(1) + Lidar_Pos3_Velocity(1) + Lidar_Pos4_Velocity(1) &
+                 + Lidar_Pos5_Velocity(1) + Lidar_Pos6_Velocity(1) + Lidar_Pos7_Velocity(1) + Lidar_Pos8_Velocity(1))/8
+         Lidar_PosMean_Velocity(2) = &
+                 (Lidar_Pos1_Velocity(2) + Lidar_Pos2_Velocity(2) + Lidar_Pos3_Velocity(2) + Lidar_Pos4_Velocity(2) &
+                  + Lidar_Pos5_Velocity(2) + Lidar_Pos6_Velocity(2) + Lidar_Pos7_Velocity(2) + Lidar_Pos8_Velocity(2))/8
+         Lidar_PosMean_Velocity(3) = &
+                 (Lidar_Pos1_Velocity(3) + Lidar_Pos2_Velocity(3) + Lidar_Pos3_Velocity(3) + Lidar_Pos4_Velocity(3) &
+                 + Lidar_Pos5_Velocity(3) + Lidar_Pos6_Velocity(3) + Lidar_Pos7_Velocity(3) + Lidar_Pos8_Velocity(3))/8
+
+         y%lidar%LidSpeed = Lidar_PosMean_Velocity(:)
+         y%lidar%WtTrunc  = 1.0_ReKi
+
    ELSEIF (p%lidar%SensorType == SensorType_ContinuousLidar) THEN
       !calculate the focal distance of the lidar as well as the modified focal distance so that the peak of the weighting func
       !is at the intended focal distance
    
-      Distance   = u%lidar%MsrPosition - u%lidar%LidPosition      
+      Distance   = u%lidar%MsrPosition_1 - u%lidar%LidPosition
       FocDist    = SQRT( DOT_PRODUCT( Distance, Distance ) ) !TwoNorm
       
       IF(EqualRealNos(FocDist,0.0_ReKi)) THEN ! Avoid division-by-zero
@@ -369,7 +456,7 @@ SUBROUTINE Lidar_CalcOutput( t, u, p, x, xd, z, OtherState, y, m, ErrStat, ErrMs
       LidWtRatio = 1.0_ReKi !LidWt/LidWtMax
    
       !get lidar speed at the focal point to see if it is out of bounds   
-      Input%PositionXYZ(:,1) = u%lidar%MsrPosition      
+      Input%PositionXYZ(:,1) = u%lidar%MsrPosition_1
       CALL CalculateOutput( t, Input, p, x, xd, z, OtherState, Output, m, .FALSE., ErrStat2, ErrMsg2 )      
          CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )                
     

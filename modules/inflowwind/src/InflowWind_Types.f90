@@ -188,6 +188,8 @@ IMPLICIT NONE
   TYPE, PUBLIC :: InflowWind_InputType
     REAL(ReKi) , DIMENSION(:,:), ALLOCATABLE  :: PositionXYZ      !< Array holding the input positions at a given timestep [meters]
     TYPE(Lidar_InputType)  :: lidar      !< Lidar data [-]
+    REAL(ReKi) , DIMENSION(1:3)  :: HubPosition      !< orientation of the Hub (direction cosine matrix) [-]
+    REAL(ReKi) , DIMENSION(1:3,1:3)  :: NacelleOrientation      !< orientation of the Hub (direction cosine matrix) [-]
   END TYPE InflowWind_InputType
 ! =======================
 ! =========  InflowWind_OutputType  =======
@@ -4371,6 +4373,8 @@ ENDIF
       CALL Lidar_CopyInput( SrcInputData%lidar, DstInputData%lidar, CtrlCode, ErrStat2, ErrMsg2 )
          CALL SetErrStat(ErrStat2, ErrMsg2, ErrStat, ErrMsg,RoutineName)
          IF (ErrStat>=AbortErrLev) RETURN
+   DstInputData%HubPosition = SrcInputData%HubPosition
+   DstInputData%NacelleOrientation = SrcInputData%NacelleOrientation
  END SUBROUTINE InflowWind_CopyInput
 
  SUBROUTINE InflowWind_DestroyInput( InputData, ErrStat, ErrMsg )
@@ -4446,7 +4450,9 @@ ENDIF
          Int_BufSz = Int_BufSz + SIZE( Int_Buf )
          DEALLOCATE(Int_Buf)
       END IF
-  IF ( Re_BufSz  .GT. 0 ) THEN 
+  Re_BufSz = Re_BufSz + SIZE(InData%HubPosition)  ! HubPosition
+  Re_BufSz = Re_BufSz + SIZE(InData%NacelleOrientation)  ! NacelleOrientation
+  IF ( Re_BufSz  .GT. 0 ) THEN
      ALLOCATE( ReKiBuf(  Re_BufSz  ), STAT=ErrStat2 )
      IF (ErrStat2 /= 0) THEN 
        CALL SetErrStat(ErrID_Fatal, 'Error allocating ReKiBuf.', ErrStat, ErrMsg,RoutineName)
@@ -4521,6 +4527,16 @@ ENDIF
       ELSE
         IntKiBuf( Int_Xferred ) = 0; Int_Xferred = Int_Xferred + 1
       ENDIF
+      DO i1 = LBOUND(InData%HubPosition,1), UBOUND(InData%HubPosition,1)
+        ReKiBuf(Re_Xferred) = InData%HubPosition(i1)
+        Re_Xferred = Re_Xferred + 1
+      END DO
+      DO i2 = LBOUND(InData%NacelleOrientation,2), UBOUND(InData%NacelleOrientation,2)
+       DO i1 = LBOUND(InData%NacelleOrientation,1), UBOUND(InData%NacelleOrientation,1)
+         ReKiBuf(Re_Xferred) = InData%NacelleOrientation(i1,i2)
+         Re_Xferred = Re_Xferred + 1
+       END DO
+     END DO
  END SUBROUTINE InflowWind_PackInput
 
  SUBROUTINE InflowWind_UnPackInput( ReKiBuf, DbKiBuf, IntKiBuf, Outdata, ErrStat, ErrMsg )
@@ -4614,6 +4630,23 @@ ENDIF
       IF(ALLOCATED(Re_Buf )) DEALLOCATE(Re_Buf )
       IF(ALLOCATED(Db_Buf )) DEALLOCATE(Db_Buf )
       IF(ALLOCATED(Int_Buf)) DEALLOCATE(Int_Buf)
+
+    i1_l = LBOUND(OutData%HubPosition,1)
+    i1_u = LBOUND(OutData%HubPosition,1)
+    Do i1 = LBOUND(OutData%HubPosition,1), UBOUND(OutData%HubPosition,1)
+      OutData%HubPosition(i1) = ReKiBuf(Re_Xferred)
+      Re_Xferred = Re_Xferred + 1
+    End Do
+    i1_l = LBOUND(OutData%NacelleOrientation,1)
+    i1_u = LBOUND(OutData%NacelleOrientation,1)
+    i2_l = LBOUND(OutData%NacelleOrientation,2)
+    i2_u = LBOUND(OutData%NacelleOrientation,2)
+     DO i2 = LBOUND(OutData%NacelleOrientation,2), UBOUND(OutData%NacelleOrientation,2)
+       DO i1 = LBOUND(OutData%NacelleOrientation,1), UBOUND(OutData%NacelleOrientation,1)
+         OutData%NacelleOrientation(i1,i2) = ReKiBuf(Re_Xferred)
+         Re_Xferred = Re_Xferred + 1
+       END DO
+     END DO
  END SUBROUTINE InflowWind_UnPackInput
 
  SUBROUTINE InflowWind_CopyOutput( SrcOutputData, DstOutputData, CtrlCode, ErrStat, ErrMsg )
@@ -5566,6 +5599,17 @@ IF (ALLOCATED(u_out%PositionXYZ) .AND. ALLOCATED(u1%PositionXYZ)) THEN
 END IF ! check if allocated
       CALL Lidar_Input_ExtrapInterp1( u1%lidar, u2%lidar, tin, u_out%lidar, tin_out, ErrStat2, ErrMsg2 )
         CALL SetErrStat(ErrStat2, ErrMsg2, ErrStat, ErrMsg,RoutineName)
+   Do i1 = LBOUND(u_out%HubPosition,1),UBOUND(u_out%HubPosition,1)
+       b = -(u1%HubPosition(i1) - u2%HubPosition(i1))
+       u_out%HubPosition(i1) = u1%HubPosition(i1) + b * ScaleFactor
+   End Do
+   Do i2 = LBOUND(u_out%NacelleOrientation,2),UBOUND(u_out%NacelleOrientation,2)
+     Do i1 = LBOUND(u_out%NacelleOrientation,1),UBOUND(u_out%NacelleOrientation,1)
+       b = -(u1%NacelleOrientation(i1,i2) - u2%NacelleOrientation(i1,i2))
+       u_out%NacelleOrientation(i1,i2) = u1%NacelleOrientation(i1,i2) + b * ScaleFactor
+     End Do
+   End Do
+
  END SUBROUTINE InflowWind_Input_ExtrapInterp1
 
 
@@ -5636,6 +5680,20 @@ IF (ALLOCATED(u_out%PositionXYZ) .AND. ALLOCATED(u1%PositionXYZ)) THEN
 END IF ! check if allocated
       CALL Lidar_Input_ExtrapInterp2( u1%lidar, u2%lidar, u3%lidar, tin, u_out%lidar, tin_out, ErrStat2, ErrMsg2 )
         CALL SetErrStat(ErrStat2, ErrMsg2, ErrStat, ErrMsg,RoutineName)
+
+   DO i1 = LBOUND(u_out%HubPosition,1),UBOUND(u_out%HubPosition,1)
+     b = (t(3)**2*(u1%HubPosition(i1) - u2%HubPosition(i1)) + t(2)**2*(-u1%HubPosition(i1) + u3%HubPosition(i1)))* scaleFactor
+     c = ( (t(2)-t(3))*u1%HubPosition(i1) + t(3)*u2%HubPosition(i1) - t(2)*u3%HubPosition(i1) ) * scaleFactor
+     u_out%HubPosition(i1) = u1%HubPosition(i1) + b  + c * t_out
+   END DO
+   DO i2 = LBOUND(u_out%NacelleOrientation,2),UBOUND(u_out%NacelleOrientation,2)
+     DO i1 = LBOUND(u_out%NacelleOrientation,1),UBOUND(u_out%NacelleOrientation,1)
+       b = (t(3)**2*(u1%NacelleOrientation(i1,i2) - u2%NacelleOrientation(i1,i2)) + t(2)**2*(-u1%NacelleOrientation(i1,i2) + u3%NacelleOrientation(i1,i2)))* scaleFactor
+       c = ( (t(2)-t(3))*u1%NacelleOrientation(i1,i2) + t(3)*u2%NacelleOrientation(i1,i2) - t(2)*u3%NacelleOrientation(i1,i2) ) * scaleFactor
+       u_out%NacelleOrientation(i1,i2) = u1%NacelleOrientation(i1,i2) + b  + c * t_out
+     END DO
+   END DO
+
  END SUBROUTINE InflowWind_Input_ExtrapInterp2
 
 

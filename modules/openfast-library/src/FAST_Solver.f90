@@ -478,7 +478,9 @@ SUBROUTINE IfW_InputSolve( p_FAST, m_FAST, u_IfW, p_IfW, u_AD14, u_AD, OtherSt_A
       end if
       
    END IF
-   
+
+   u_IfW%HubPosition    = y_ED%HubPtMotion%Position(:,1) + y_ED%HubPtMotion%TranslationDisp(:,1)
+   u_IfW%NacelleOrientation = y_ED%NacelleMotion%Orientation(:,:,1)
                
    CALL IfW_SetExternalInputs( p_IfW, m_FAST, y_ED, u_IfW )
 
@@ -501,7 +503,7 @@ SUBROUTINE IfW_SetExternalInputs( p_IfW, m_FAST, y_ED, u_IfW )
    u_IfW%lidar%LidPosition = y_ED%HubPtMotion%Position(:,1) + y_ED%HubPtMotion%TranslationDisp(:,1) & ! rotor apex position (absolute)
                                                             + p_IfW%lidar%RotorApexOffsetPos            ! lidar offset-from-rotor-apex position
       
-   u_IfW%lidar%MsrPosition = m_FAST%ExternInput%LidarFocus + u_IfW%lidar%LidPosition
+   !u_IfW%lidar%MsrPosition_1 = m_FAST%ExternInput%LidarFocus + u_IfW%lidar%LidPosition
 
 
 END SUBROUTINE IfW_SetExternalInputs
@@ -5604,15 +5606,23 @@ SUBROUTINE SolveOption2c_Inp2AD_SrvD(this_time, this_state, p_FAST, m_FAST, ED, 
          
    IF (p_FAST%CompInflow == Module_IfW) THEN
 
+      ! D-ICE getting hub displacments
+!      IfW%Input%lidar%HubDisplacementX = ED%y%HubPtMotion%TranslationDisp(1,1)
+!      IfW%Input%lidar%HubDisplacementY = ED%y%HubPtMotion%TranslationDisp(2,1)
+!      IfW%Input%lidar%HubDisplacementZ = ED%y%HubPtMotion%TranslationDisp(3,1)
+      IfW%Input%lidar%HubDisplacementX = ED%y%NacelleMotion%TranslationDisp(1,1)
+      IfW%Input%lidar%HubDisplacementY = ED%y%NacelleMotion%TranslationDisp(2,1)
+      IfW%Input%lidar%HubDisplacementZ = ED%y%NacelleMotion%TranslationDisp(3,1)
+
       CALL InflowWind_CalcOutput( this_time, IfW%Input(1), IfW%p, IfW%x(this_state), IfW%xd(this_state), IfW%z(this_state), &
                                   IfW%OtherSt(this_state), IfW%y, IfW%m, ErrStat2, ErrMsg2 )
-         CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )         
+         CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
    !ELSE IF ( p_FAST%CompInflow == Module_OpFM ) THEN
-   ! ! OpenFOAM is the driver and it computes outputs outside of this solve; the OpenFOAM inputs and outputs thus don't change 
+   ! ! OpenFOAM is the driver and it computes outputs outside of this solve; the OpenFOAM inputs and outputs thus don't change
    ! !   in this scenario until OpenFOAM takes another step  **this is a source of error, but it is the way the OpenFOAM-FAST7 coupling
    ! !   works, so I'm not going to spend time that I don't have now to fix it**
    !   CALL OpFM_SetInputs( p_FAST, AD14%p, AD14%Input(1), AD14%y, AD%Input(1), AD%y, ED%y, SrvD%y, OpFM, ErrStat2, ErrMsg2 )
-   !      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName ) 
+   !      CALL SetErrStat( ErrStat2, ErrMsg2, ErrStat, ErrMsg, RoutineName )
    !   CALL OpFM_SetWriteOutput(OpFM)
       
    END IF

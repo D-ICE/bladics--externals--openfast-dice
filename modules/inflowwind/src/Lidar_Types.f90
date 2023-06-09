@@ -33,13 +33,14 @@ MODULE Lidar_Types
 !---------------------------------------------------------------------------------------------------------------------------------
 USE NWTC_Library
 IMPLICIT NONE
-    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_None = -1 
-    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_SinglePoint = 0 
-    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_ContinuousLidar = 1 
-    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_PulsedLidar = 2 
+    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_None = -1
+    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_SinglePoint = 0
+    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_ContinuousLidar = 1
+    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_PulsedLidar = 2
+    INTEGER(IntKi), PUBLIC, PARAMETER  :: SensorType_Dice_MultiPoint = 3
 ! =========  Lidar_InitInputType  =======
   TYPE, PUBLIC :: Lidar_InitInputType
-    INTEGER(IntKi)  :: SensorType = SensorType_SinglePoint      !< SensorType_* parameter [-] !DICE
+    INTEGER(IntKi)  :: SensorType = SensorType_Dice_MultiPoint      !< SensorType_* parameter [-] !DICE
     REAL(DbKi)  :: Tmax      !< the length of the simulation [s]
     REAL(ReKi) , DIMENSION(1:3)  :: RotorApexOffsetPos      !< position of the lidar unit relative to the rotor apex of rotation [m]
     REAL(ReKi) , DIMENSION(1:3)  :: HubPosition      !< initial position of the hub (lidar mounted on hub) [0,0,HubHeight] [m]
@@ -95,9 +96,19 @@ IMPLICIT NONE
 ! =========  Lidar_InputType  =======
   TYPE, PUBLIC :: Lidar_InputType
     REAL(ReKi) , DIMENSION(1:3)  :: LidPosition      !< Position of the Lidar unit (was XLidPt, YLidPt, ZLidPt) [m]
-    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
+    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition_1      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
+    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition_2      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
+    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition_3      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
+    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition_4      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
+    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition_5      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
+    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition_6      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
+    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition_7      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
+    REAL(ReKi) , DIMENSION(1:3)  :: MsrPosition_8      !< Position of the desired wind measurement (was XMsrPt, YMsrPt, ZMsrPt) [m]
     REAL(ReKi)  :: PulseLidEl      !< the angle off of the x axis that the lidar is aimed (0 would be staring directly upwind, pi/2 would be staring perpendicular to the x axis) [-]
     REAL(ReKi)  :: PulseLidAz      !< the angle in the YZ plane that the lidar is staring (if PulseLidEl is set to pi/2, then 0 would be aligned with the positive z axis, pi/2 would be aligned with the positive y axis) [-]
+    REAL(ReKi)  :: HubDisplacementX      !< X direction hub displacement of the lidar (from ElastoDyn) [m]
+    REAL(ReKi)  :: HubDisplacementY      !< Y direction hub displacement of the lidar (from ElastoDyn) [m]
+    REAL(ReKi)  :: HubDisplacementZ      !< Z direction hub displacement of the lidar (from ElastoDyn) [m]
   END TYPE Lidar_InputType
 ! =======================
 ! =========  Lidar_OutputType  =======
@@ -1235,9 +1246,19 @@ CONTAINS
    ErrStat = ErrID_None
    ErrMsg  = ""
     DstInputData%LidPosition = SrcInputData%LidPosition
-    DstInputData%MsrPosition = SrcInputData%MsrPosition
+    DstInputData%MsrPosition_1 = SrcInputData%MsrPosition_1
+    DstInputData%MsrPosition_2 = SrcInputData%MsrPosition_2
+    DstInputData%MsrPosition_3 = SrcInputData%MsrPosition_3
+    DstInputData%MsrPosition_4 = SrcInputData%MsrPosition_4
+    DstInputData%MsrPosition_5 = SrcInputData%MsrPosition_5
+    DstInputData%MsrPosition_6 = SrcInputData%MsrPosition_6
+    DstInputData%MsrPosition_7 = SrcInputData%MsrPosition_7
+    DstInputData%MsrPosition_8 = SrcInputData%MsrPosition_8
     DstInputData%PulseLidEl = SrcInputData%PulseLidEl
     DstInputData%PulseLidAz = SrcInputData%PulseLidAz
+    DstInputData%HubDisplacementX = SrcInputData%HubDisplacementX
+    DstInputData%HubDisplacementY = SrcInputData%HubDisplacementY
+    DstInputData%HubDisplacementZ = SrcInputData%HubDisplacementZ
  END SUBROUTINE Lidar_CopyInput
 
  SUBROUTINE Lidar_DestroyInput( InputData, ErrStat, ErrMsg )
@@ -1287,9 +1308,19 @@ CONTAINS
   Db_BufSz  = 0
   Int_BufSz  = 0
       Re_BufSz   = Re_BufSz   + SIZE(InData%LidPosition)  ! LidPosition
-      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition)  ! MsrPosition
+      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition_1)  ! MsrPosition_1
+      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition_2)  ! MsrPosition_2
+      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition_3)  ! MsrPosition_3
+      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition_4)  ! MsrPosition_4
+      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition_5)  ! MsrPosition_5
+      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition_6)  ! MsrPosition_6
+      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition_7)  ! MsrPosition_7
+      Re_BufSz   = Re_BufSz   + SIZE(InData%MsrPosition_8)  ! MsrPosition_8
       Re_BufSz   = Re_BufSz   + 1  ! PulseLidEl
       Re_BufSz   = Re_BufSz   + 1  ! PulseLidAz
+      Re_BufSz   = Re_BufSz   + 1  ! HubDisplacementX
+      Re_BufSz   = Re_BufSz   + 1  ! HubDisplacementY
+      Re_BufSz   = Re_BufSz   + 1  ! HubDisplacementZ
   IF ( Re_BufSz  .GT. 0 ) THEN 
      ALLOCATE( ReKiBuf(  Re_BufSz  ), STAT=ErrStat2 )
      IF (ErrStat2 /= 0) THEN 
@@ -1321,13 +1352,47 @@ CONTAINS
       ReKiBuf(Re_Xferred) = InData%LidPosition(i1)
       Re_Xferred = Re_Xferred + 1
     END DO
-    DO i1 = LBOUND(InData%MsrPosition,1), UBOUND(InData%MsrPosition,1)
-      ReKiBuf(Re_Xferred) = InData%MsrPosition(i1)
+    DO i1 = LBOUND(InData%MsrPosition_1,1), UBOUND(InData%MsrPosition_1,1)
+      ReKiBuf(Re_Xferred) = InData%MsrPosition_1(i1)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    DO i1 = LBOUND(InData%MsrPosition_2,1), UBOUND(InData%MsrPosition_2,1)
+      ReKiBuf(Re_Xferred) = InData%MsrPosition_2(i1)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    DO i1 = LBOUND(InData%MsrPosition_3,1), UBOUND(InData%MsrPosition_3,1)
+      ReKiBuf(Re_Xferred) = InData%MsrPosition_3(i1)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    DO i1 = LBOUND(InData%MsrPosition_4,1), UBOUND(InData%MsrPosition_4,1)
+      ReKiBuf(Re_Xferred) = InData%MsrPosition_4(i1)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    DO i1 = LBOUND(InData%MsrPosition_5,1), UBOUND(InData%MsrPosition_5,1)
+      ReKiBuf(Re_Xferred) = InData%MsrPosition_5(i1)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    DO i1 = LBOUND(InData%MsrPosition_6,1), UBOUND(InData%MsrPosition_6,1)
+      ReKiBuf(Re_Xferred) = InData%MsrPosition_6(i1)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    DO i1 = LBOUND(InData%MsrPosition_7,1), UBOUND(InData%MsrPosition_7,1)
+      ReKiBuf(Re_Xferred) = InData%MsrPosition_7(i1)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    DO i1 = LBOUND(InData%MsrPosition_8,1), UBOUND(InData%MsrPosition_8,1)
+      ReKiBuf(Re_Xferred) = InData%MsrPosition_8(i1)
       Re_Xferred = Re_Xferred + 1
     END DO
     ReKiBuf(Re_Xferred) = InData%PulseLidEl
     Re_Xferred = Re_Xferred + 1
     ReKiBuf(Re_Xferred) = InData%PulseLidAz
+    Re_Xferred = Re_Xferred + 1
+    ReKiBuf(Re_Xferred) = InData%HubDisplacementX
+    Re_Xferred = Re_Xferred + 1
+    ReKiBuf(Re_Xferred) = InData%HubDisplacementY
+    Re_Xferred = Re_Xferred + 1
+    ReKiBuf(Re_Xferred) = InData%HubDisplacementZ
     Re_Xferred = Re_Xferred + 1
  END SUBROUTINE Lidar_PackInput
 
@@ -1364,15 +1429,63 @@ CONTAINS
       OutData%LidPosition(i1) = ReKiBuf(Re_Xferred)
       Re_Xferred = Re_Xferred + 1
     END DO
-    i1_l = LBOUND(OutData%MsrPosition,1)
-    i1_u = UBOUND(OutData%MsrPosition,1)
-    DO i1 = LBOUND(OutData%MsrPosition,1), UBOUND(OutData%MsrPosition,1)
-      OutData%MsrPosition(i1) = ReKiBuf(Re_Xferred)
+    i1_l = LBOUND(OutData%MsrPosition_1,1)
+    i1_u = UBOUND(OutData%MsrPosition_1,1)
+    DO i1 = LBOUND(OutData%MsrPosition_1,1), UBOUND(OutData%MsrPosition_1,1)
+      OutData%MsrPosition_1(i1) = ReKiBuf(Re_Xferred)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    i1_l = LBOUND(OutData%MsrPosition_2,1)
+    i1_u = UBOUND(OutData%MsrPosition_2,1)
+    DO i1 = LBOUND(OutData%MsrPosition_2,1), UBOUND(OutData%MsrPosition_2,1)
+      OutData%MsrPosition_2(i1) = ReKiBuf(Re_Xferred)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    i1_l = LBOUND(OutData%MsrPosition_3,1)
+    i1_u = UBOUND(OutData%MsrPosition_3,1)
+    DO i1 = LBOUND(OutData%MsrPosition_3,1), UBOUND(OutData%MsrPosition_3,1)
+      OutData%MsrPosition_3(i1) = ReKiBuf(Re_Xferred)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    i1_l = LBOUND(OutData%MsrPosition_4,1)
+    i1_u = UBOUND(OutData%MsrPosition_4,1)
+    DO i1 = LBOUND(OutData%MsrPosition_4,1), UBOUND(OutData%MsrPosition_4,1)
+      OutData%MsrPosition_4(i1) = ReKiBuf(Re_Xferred)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    i1_l = LBOUND(OutData%MsrPosition_5,1)
+    i1_u = UBOUND(OutData%MsrPosition_5,1)
+    DO i1 = LBOUND(OutData%MsrPosition_5,1), UBOUND(OutData%MsrPosition_5,1)
+      OutData%MsrPosition_5(i1) = ReKiBuf(Re_Xferred)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    i1_l = LBOUND(OutData%MsrPosition_6,1)
+    i1_u = UBOUND(OutData%MsrPosition_6,1)
+    DO i1 = LBOUND(OutData%MsrPosition_6,1), UBOUND(OutData%MsrPosition_6,1)
+      OutData%MsrPosition_6(i1) = ReKiBuf(Re_Xferred)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    i1_l = LBOUND(OutData%MsrPosition_7,1)
+    i1_u = UBOUND(OutData%MsrPosition_7,1)
+    DO i1 = LBOUND(OutData%MsrPosition_7,1), UBOUND(OutData%MsrPosition_7,1)
+      OutData%MsrPosition_7(i1) = ReKiBuf(Re_Xferred)
+      Re_Xferred = Re_Xferred + 1
+    END DO
+    i1_l = LBOUND(OutData%MsrPosition_8,1)
+    i1_u = UBOUND(OutData%MsrPosition_8,1)
+    DO i1 = LBOUND(OutData%MsrPosition_8,1), UBOUND(OutData%MsrPosition_8,1)
+      OutData%MsrPosition_8(i1) = ReKiBuf(Re_Xferred)
       Re_Xferred = Re_Xferred + 1
     END DO
     OutData%PulseLidEl = ReKiBuf(Re_Xferred)
     Re_Xferred = Re_Xferred + 1
     OutData%PulseLidAz = ReKiBuf(Re_Xferred)
+    Re_Xferred = Re_Xferred + 1
+    OutData%HubDisplacementX = ReKiBuf(Re_Xferred)
+    Re_Xferred = Re_Xferred + 1
+    OutData%HubDisplacementY = ReKiBuf(Re_Xferred)
+    Re_Xferred = Re_Xferred + 1
+    OutData%HubDisplacementZ = ReKiBuf(Re_Xferred)
     Re_Xferred = Re_Xferred + 1
  END SUBROUTINE Lidar_UnPackInput
 
@@ -1702,14 +1815,48 @@ ENDIF
     b = -(u1%LidPosition(i1) - u2%LidPosition(i1))
     u_out%LidPosition(i1) = u1%LidPosition(i1) + b * ScaleFactor
   END DO
-  DO i1 = LBOUND(u_out%MsrPosition,1),UBOUND(u_out%MsrPosition,1)
-    b = -(u1%MsrPosition(i1) - u2%MsrPosition(i1))
-    u_out%MsrPosition(i1) = u1%MsrPosition(i1) + b * ScaleFactor
+  DO i1 = LBOUND(u_out%MsrPosition_1,1),UBOUND(u_out%MsrPosition_1,1)
+    b = -(u1%MsrPosition_1(i1) - u2%MsrPosition_1(i1))
+    u_out%MsrPosition_1(i1) = u1%MsrPosition_1(i1) + b * ScaleFactor
   END DO
-  b = -(u1%PulseLidEl - u2%PulseLidEl)
-  u_out%PulseLidEl = u1%PulseLidEl + b * ScaleFactor
-  b = -(u1%PulseLidAz - u2%PulseLidAz)
-  u_out%PulseLidAz = u1%PulseLidAz + b * ScaleFactor
+   DO i1 = LBOUND(u_out%MsrPosition_2,1),UBOUND(u_out%MsrPosition_2,1)
+     b = -(u1%MsrPosition_2(i1) - u2%MsrPosition_2(i1))
+     u_out%MsrPosition_2(i1) = u1%MsrPosition_2(i1) + b * ScaleFactor
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_3,1),UBOUND(u_out%MsrPosition_3,1)
+     b = -(u1%MsrPosition_3(i1) - u2%MsrPosition_3(i1))
+     u_out%MsrPosition_3(i1) = u1%MsrPosition_3(i1) + b * ScaleFactor
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_4,1),UBOUND(u_out%MsrPosition_4,1)
+     b = -(u1%MsrPosition_4(i1) - u2%MsrPosition_4(i1))
+     u_out%MsrPosition_4(i1) = u1%MsrPosition_4(i1) + b * ScaleFactor
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_5,1),UBOUND(u_out%MsrPosition_5,1)
+     b = -(u1%MsrPosition_5(i1) - u2%MsrPosition_5(i1))
+     u_out%MsrPosition_5(i1) = u1%MsrPosition_5(i1) + b * ScaleFactor
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_6,1),UBOUND(u_out%MsrPosition_6,1)
+     b = -(u1%MsrPosition_6(i1) - u2%MsrPosition_6(i1))
+     u_out%MsrPosition_6(i1) = u1%MsrPosition_6(i1) + b * ScaleFactor
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_7,1),UBOUND(u_out%MsrPosition_7,1)
+     b = -(u1%MsrPosition_7(i1) - u2%MsrPosition_7(i1))
+     u_out%MsrPosition_7(i1) = u1%MsrPosition_7(i1) + b * ScaleFactor
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_8,1),UBOUND(u_out%MsrPosition_8,1)
+       b = -(u1%MsrPosition_8(i1) - u2%MsrPosition_8(i1))
+     u_out%MsrPosition_8(i1) = u1%MsrPosition_8(i1) + b * ScaleFactor
+   END DO
+   b = -(u1%PulseLidEl - u2%PulseLidEl)
+   u_out%PulseLidEl = u1%PulseLidEl + b * ScaleFactor
+   b = -(u1%PulseLidAz - u2%PulseLidAz)
+   u_out%PulseLidAz = u1%PulseLidAz + b * ScaleFactor
+   b = -(u1%HubDisplacementX - u2%HubDisplacementX)
+   u_out%HubDisplacementX = u1%HubDisplacementX + b * ScaleFactor
+   b = -(u1%HubDisplacementY - u2%HubDisplacementY)
+   u_out%HubDisplacementY = u1%HubDisplacementY + b * ScaleFactor
+   b = -(u1%HubDisplacementZ - u2%HubDisplacementZ)
+   u_out%HubDisplacementZ = u1%HubDisplacementZ + b * ScaleFactor
  END SUBROUTINE Lidar_Input_ExtrapInterp1
 
 
@@ -1772,17 +1919,61 @@ ENDIF
     c = ( (t(2)-t(3))*u1%LidPosition(i1) + t(3)*u2%LidPosition(i1) - t(2)*u3%LidPosition(i1) ) * scaleFactor
     u_out%LidPosition(i1) = u1%LidPosition(i1) + b  + c * t_out
   END DO
-  DO i1 = LBOUND(u_out%MsrPosition,1),UBOUND(u_out%MsrPosition,1)
-    b = (t(3)**2*(u1%MsrPosition(i1) - u2%MsrPosition(i1)) + t(2)**2*(-u1%MsrPosition(i1) + u3%MsrPosition(i1)))* scaleFactor
-    c = ( (t(2)-t(3))*u1%MsrPosition(i1) + t(3)*u2%MsrPosition(i1) - t(2)*u3%MsrPosition(i1) ) * scaleFactor
-    u_out%MsrPosition(i1) = u1%MsrPosition(i1) + b  + c * t_out
+  DO i1 = LBOUND(u_out%MsrPosition_1,1),UBOUND(u_out%MsrPosition_1,1)
+    b = (t(3)**2*(u1%MsrPosition_1(i1) - u2%MsrPosition_1(i1)) + t(2)**2*(-u1%MsrPosition_1(i1) + u3%MsrPosition_1(i1)))* scaleFactor
+    c = ( (t(2)-t(3))*u1%MsrPosition_1(i1) + t(3)*u2%MsrPosition_1(i1) - t(2)*u3%MsrPosition_1(i1) ) * scaleFactor
+    u_out%MsrPosition_1(i1) = u1%MsrPosition_1(i1) + b  + c * t_out
   END DO
-  b = (t(3)**2*(u1%PulseLidEl - u2%PulseLidEl) + t(2)**2*(-u1%PulseLidEl + u3%PulseLidEl))* scaleFactor
-  c = ( (t(2)-t(3))*u1%PulseLidEl + t(3)*u2%PulseLidEl - t(2)*u3%PulseLidEl ) * scaleFactor
-  u_out%PulseLidEl = u1%PulseLidEl + b  + c * t_out
-  b = (t(3)**2*(u1%PulseLidAz - u2%PulseLidAz) + t(2)**2*(-u1%PulseLidAz + u3%PulseLidAz))* scaleFactor
-  c = ( (t(2)-t(3))*u1%PulseLidAz + t(3)*u2%PulseLidAz - t(2)*u3%PulseLidAz ) * scaleFactor
-  u_out%PulseLidAz = u1%PulseLidAz + b  + c * t_out
+   DO i1 = LBOUND(u_out%MsrPosition_2,1),UBOUND(u_out%MsrPosition_2,1)
+     b = (t(3)**2*(u1%MsrPosition_2(i1) - u2%MsrPosition_2(i1)) + t(2)**2*(-u1%MsrPosition_2(i1) + u3%MsrPosition_2(i1)))* scaleFactor
+     c = ( (t(2)-t(3))*u1%MsrPosition_2(i1) + t(3)*u2%MsrPosition_2(i1) - t(2)*u3%MsrPosition_2(i1) ) * scaleFactor
+     u_out%MsrPosition_2(i1) = u1%MsrPosition_2(i1) + b  + c * t_out
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_3,1),UBOUND(u_out%MsrPosition_3,1)
+     b = (t(3)**2*(u1%MsrPosition_3(i1) - u2%MsrPosition_3(i1)) + t(2)**2*(-u1%MsrPosition_3(i1) + u3%MsrPosition_3(i1)))* scaleFactor
+     c = ( (t(2)-t(3))*u1%MsrPosition_3(i1) + t(3)*u2%MsrPosition_3(i1) - t(2)*u3%MsrPosition_3(i1) ) * scaleFactor
+     u_out%MsrPosition_3(i1) = u1%MsrPosition_3(i1) + b  + c * t_out
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_4,1),UBOUND(u_out%MsrPosition_4,1)
+     b = (t(3)**2*(u1%MsrPosition_4(i1) - u2%MsrPosition_4(i1)) + t(2)**2*(-u1%MsrPosition_4(i1) + u3%MsrPosition_4(i1)))* scaleFactor
+     c = ( (t(2)-t(3))*u1%MsrPosition_4(i1) + t(3)*u2%MsrPosition_4(i1) - t(2)*u3%MsrPosition_4(i1) ) * scaleFactor
+     u_out%MsrPosition_4(i1) = u1%MsrPosition_4(i1) + b  + c * t_out
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_5,1),UBOUND(u_out%MsrPosition_5,1)
+     b = (t(3)**2*(u1%MsrPosition_5(i1) - u2%MsrPosition_5(i1)) + t(2)**2*(-u1%MsrPosition_5(i1) + u3%MsrPosition_5(i1)))* scaleFactor
+     c = ( (t(2)-t(3))*u1%MsrPosition_5(i1) + t(3)*u2%MsrPosition_5(i1) - t(2)*u3%MsrPosition_5(i1) ) * scaleFactor
+     u_out%MsrPosition_5(i1) = u1%MsrPosition_5(i1) + b  + c * t_out
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_6,1),UBOUND(u_out%MsrPosition_6,1)
+     b = (t(3)**2*(u1%MsrPosition_6(i1) - u2%MsrPosition_6(i1)) + t(2)**2*(-u1%MsrPosition_6(i1) + u3%MsrPosition_6(i1)))* scaleFactor
+     c = ( (t(2)-t(3))*u1%MsrPosition_6(i1) + t(3)*u2%MsrPosition_6(i1) - t(2)*u3%MsrPosition_6(i1) ) * scaleFactor
+     u_out%MsrPosition_6(i1) = u1%MsrPosition_6(i1) + b  + c * t_out
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_7,1),UBOUND(u_out%MsrPosition_7,1)
+     b = (t(3)**2*(u1%MsrPosition_7(i1) - u2%MsrPosition_7(i1)) + t(2)**2*(-u1%MsrPosition_7(i1) + u3%MsrPosition_7(i1)))* scaleFactor
+     c = ( (t(2)-t(3))*u1%MsrPosition_7(i1) + t(3)*u2%MsrPosition_7(i1) - t(2)*u3%MsrPosition_7(i1) ) * scaleFactor
+     u_out%MsrPosition_7(i1) = u1%MsrPosition_7(i1) + b  + c * t_out
+   END DO
+   DO i1 = LBOUND(u_out%MsrPosition_8,1),UBOUND(u_out%MsrPosition_8,1)
+     b = (t(3)**2*(u1%MsrPosition_8(i1) - u2%MsrPosition_8(i1)) + t(2)**2*(-u1%MsrPosition_8(i1) + u3%MsrPosition_8(i1)))* scaleFactor
+     c = ( (t(2)-t(3))*u1%MsrPosition_8(i1) + t(3)*u2%MsrPosition_8(i1) - t(2)*u3%MsrPosition_8(i1) ) * scaleFactor
+     u_out%MsrPosition_8(i1) = u1%MsrPosition_8(i1) + b  + c * t_out
+   END DO
+   b = (t(3)**2*(u1%PulseLidEl - u2%PulseLidEl) + t(2)**2*(-u1%PulseLidEl + u3%PulseLidEl))* scaleFactor
+   c = ( (t(2)-t(3))*u1%PulseLidEl + t(3)*u2%PulseLidEl - t(2)*u3%PulseLidEl ) * scaleFactor
+   u_out%PulseLidEl = u1%PulseLidEl + b  + c * t_out
+   b = (t(3)**2*(u1%PulseLidAz - u2%PulseLidAz) + t(2)**2*(-u1%PulseLidAz + u3%PulseLidAz))* scaleFactor
+   c = ( (t(2)-t(3))*u1%PulseLidAz + t(3)*u2%PulseLidAz - t(2)*u3%PulseLidAz ) * scaleFactor
+   u_out%PulseLidAz = u1%PulseLidAz + b  + c * t_out
+   b = (t(3)**2*(u1%HubDisplacementX - u2%HubDisplacementX) + t(2)**2*(-u1%HubDisplacementX + u3%HubDisplacementX))* scaleFactor
+   c = ( (t(2)-t(3))*u1%HubDisplacementX + t(3)*u2%HubDisplacementX - t(2)*u3%HubDisplacementX ) * scaleFactor
+   u_out%HubDisplacementX = u1%HubDisplacementX + b  + c * t_out
+   b = (t(3)**2*(u1%HubDisplacementY - u2%HubDisplacementY) + t(2)**2*(-u1%HubDisplacementY + u3%HubDisplacementY))* scaleFactor
+   c = ( (t(2)-t(3))*u1%HubDisplacementY + t(3)*u2%HubDisplacementY - t(2)*u3%HubDisplacementY ) * scaleFactor
+   u_out%HubDisplacementY = u1%HubDisplacementY + b  + c * t_out
+   b = (t(3)**2*(u1%HubDisplacementZ - u2%HubDisplacementZ) + t(2)**2*(-u1%HubDisplacementZ + u3%HubDisplacementZ))* scaleFactor
+   c = ( (t(2)-t(3))*u1%HubDisplacementZ + t(3)*u2%HubDisplacementZ - t(2)*u3%HubDisplacementZ ) * scaleFactor
+   u_out%HubDisplacementZ = u1%HubDisplacementZ + b  + c * t_out
  END SUBROUTINE Lidar_Input_ExtrapInterp2
 
 

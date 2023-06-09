@@ -551,9 +551,9 @@ IMPLICIT NONE
     REAL(ReKi)  :: YawBrRVyp      !< Tower-top / yaw bearing angular (rotational) pitch velocity (absolute) [rad/s]
     REAL(ReKi)  :: YawBrRVxp      !< Tower-top / yaw bearing angular (rotational) roll velocity (absolute) [rad/s]
     REAL(ReKi)  :: YawBrRVzp      !< Tower-top / yaw bearing angular (rotational) torsion velocity (absolute) [rad/s]
-    REAL(ReKi)  :: LidarWindVx      !< Lidar measured wind speed 100m in front of the hub along x [m/s]
-    REAL(ReKi)  :: LidarWindVy      !< Lidar measured wind speed 100m in front of the hub along y [m/s]
-    REAL(ReKi)  :: LidarWindVz      !< Lidar measured wind speed 100m in front of the hub along z [m/s]
+    REAL(ReKi)  :: LidarWindVx      !< Lidar measured wind speed 50m in front of the hub along x [m/s]
+    REAL(ReKi)  :: LidarWindVy      !< Lidar measured wind speed 50m in front of the hub along y [m/s]
+    REAL(ReKi)  :: LidarWindVz      !< Lidar measured wind speed 50m in front of the hub along z [m/s]
 
   END TYPE SrvD_InputType
 ! =======================
